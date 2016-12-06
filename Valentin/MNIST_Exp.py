@@ -44,6 +44,7 @@ class mnist_model:
 
 		self.prediction
 		self.optimize
+		self.accuracy
 
 	@define_scope
 	def prediction(self):
