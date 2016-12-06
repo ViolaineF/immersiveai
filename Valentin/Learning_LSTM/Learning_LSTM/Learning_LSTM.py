@@ -1,5 +1,4 @@
 import tensorflow as tf
-
 from tqdm import tqdm
 import functools
 
@@ -35,11 +34,15 @@ class lstm_model:
 
 	@define_scope
 	def prediction(self):
-		# Creer Weights & Biais
-		weights = tf.Variable(tf.zeros[self.input_size, self.output_size])
-		biaises = tf.Variable(tf.zeros[self.output_size])
-		# y = Wx + b
-		return tf.matmul(self.input_placeholder, weights) + biaises
+		input_image_placeholder = tf.reshape(self.input_placeholder, [-1, self.image_width, self.image_height, 1])
+
+		# 1st Layer (Convolution + ReLU + Max pooling)
+		weights_conv_layer1 = mnist_model.weight_variable([self.kernel_size, self.kernel_size, 1, self.conv1_features_count])
+		biaises_conv_layer1 = mnist_model.bias_variable([self.conv1_features_count])
+		hidden_conv_layer1 = tf.nn.relu(mnist_model.conv2d(input_image_placeholder, weights_conv_layer1) + biaises_conv_layer1)
+		hidden_max_pool_layer1 = mnist_model.max_pool_2x2(hidden_conv_layer1)
+
+		return ...
 
 	@define_scope
 	def optimize(self):
