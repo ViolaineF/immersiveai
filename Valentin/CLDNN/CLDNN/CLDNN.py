@@ -61,7 +61,7 @@ class CLDNNModel:
         relu_conv_layer = tf.nn.relu(conv_layer)
 
         # 2nd Layer (Max Pooling)
-        max_pool_layer = CLDNNModel.max_pool_2x2(relu_conv_layer)
+        max_pool_layer = CLDNNModel.max_pool_1x2(relu_conv_layer)
         print(max_pool_layer)
 
         # 3rd Layer (Dimension reduction)
@@ -107,18 +107,29 @@ class CLDNNModel:
         return tf.nn.conv2d(inputTensor, weights, strides=[1, 1, 1, 1], padding='SAME')
 
     @staticmethod
-    def max_pool_2x2(inputTensor):
-        return tf.nn.max_pool(inputTensor, ksize=[1, 2, 1, 1], strides=[1, 2, 1, 1], padding='SAME')
+    def max_pool_1x2(inputTensor):
+        return tf.nn.max_pool(inputTensor, ksize=[1, 1, 2, 1], strides=[1, 1, 2, 1], padding='SAME')
 
     @staticmethod
-    def weight_variable(shape):
-        initial = tf.truncated_normal(shape, stddev=0.1)
-        return tf.Variable(initial)
+    def init_variable(shape, init_method='uniform', xavier_params = (None, None)):
+        if init_method == 'zeros':
+            return tf.Variable(tf.zeros(shape, dtype=tf.float32))
+        elif init_method == 'uniform':
+            return tf.Variable(tf.random_normal(shape, stddev=0.01, dtype=tf.float32))
+        else: #xavier
+            (fan_in, fan_out) = xavier_params
+            low = -4*np.sqrt(6.0/(fan_in + fan_out)) # {sigmoid:4, tanh:1} 
+            high = 4*np.sqrt(6.0/(fan_in + fan_out))
+            return tf.Variable(tf.random_uniform(shape, minval=low, maxval=high, dtype=tf.float32))
+        # Need for gaussian (for LSTM)
 
     @staticmethod
-    def bias_variable(shape):
-        initial = tf.constant(0.1, shape=shape)
-        return tf.Variable(initial)
+    def weight_variable(shape, init_method='uniform', xavier_params = (None, None)):
+        return CLDNNModel.init_variable(shape, init_method, xavier_params)
+
+    @staticmethod
+    def bias_variable(shape, init_method='uniform', xavier_params = (None, None)):
+        return CLDNNModel.init_variable(shape, init_method, xavier_params)
 
 # For testing purpose
 cldnn = CLDNNModel(tf.placeholder(tf.float32, shape=[None, 32 * 84]), tf.placeholder(tf.float32, shape=[None, 10]), 32, 84)
