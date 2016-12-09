@@ -132,4 +132,4 @@ class CLDNNModel:
         return CLDNNModel.init_variable(shape, init_method, xavier_params)
 
 # For testing purpose
-cldnn = CLDNNModel(tf.placeholder(tf.float32, shape=[None, 32 * 84]), tf.placeholder(tf.float32, shape=[None, 10]), 32, 84)
+#cldnn = CLDNNModel(tf.placeholder(tf.float32, shape=[None, 32 * 84]), tf.placeholder(tf.float32, shape=[None, 10]), 32, 84)
