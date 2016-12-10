@@ -7,13 +7,15 @@ from python_speech_features import logfbank
 import scipy.io.wavfile as wav
 import os
 import numpy as np
+from tqdm import tqdm
+import gc
 
 class SpeechData(object):
     def __init__(self, filename : str):
 
         self.mp3_filename = filename
 
-        if ".mp3" in filename:
+        if filename.endswith(".mp3"):
             filename = filename.replace(".mp3", ".wav")
         else:
             filename += ".wav"
@@ -35,9 +37,29 @@ class SpeechData(object):
 
     def save_fbank_as_binary(self, filename=None):
         if filename is None:
-            if ".mp3" in self.mp3_filename:
+            if self.mp3_filename.endswith(".mp3") :
                 filename = self.mp3_filename.replace(".mp3", ".npy")
             else:
                 filename += ".npy"
 
         np.save(filename, self.fbank_feat)
+
+    @staticmethod
+    def process_all_in_directory(dirpath:str):
+        if not os.path.isdir(dirpath):
+            print(dirpath + " is not a valid directory. Aborting.")
+            return
+
+        sound_files = []
+
+        for root, directories, filenames in os.walk(dirpath):
+            for filename in filenames:
+                if filename.endswith(".mp3"):
+                    sound_files.append(os.path.join(root, filename))
+
+        sound_files_count = len(sound_files)
+        for i in tqdm(range(sound_files_count)):
+            sound_file = sound_files[i]
+            with SpeechData(sound_file) as speech_data:
+                speech_data.save_fbank_as_binary()
+            gc.collect()
