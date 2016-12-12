@@ -39,7 +39,7 @@ class SpeechData(object):
 
     def save_fbank_as_binary(self, filename=None):
         if filename is None:
-            filename = self.get_npy_filename()
+            filename = SpeechData.get_npy_filename(self.filename)
 
         np.save(filename, self.features)
 
