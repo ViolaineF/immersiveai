@@ -83,4 +83,4 @@ def plotstft(audiopath, binsize=2**10, plotpath=None, colormap="jet"):
         
     plt.clf()
 
-#plotstft("my_audio_file.wav")
+plotstft(r"C:\Users\degva_000\Music\War3Zik\Voices\BloodElfMagePissed5.wav")
