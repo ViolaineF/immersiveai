@@ -120,6 +120,15 @@ class SpeechData(object):
         files_count = len(audio_files) # should be equal to the number of time files
         all_times = get_all_times(times_files)
 
+        process_order = ""
+        for i in range(files_count):
+            process_order += str(i) + ',' + audio_files[i] + ',' + times_files[i]
+            if i != (files_count - 1) :
+                process_order += '\n'
+        process_order_file = open(os.path.join(dirpath, "process_order.txt"), 'w')
+        process_order_file.write(process_order)
+        process_order_file.close()
+
         for i in tqdm(range(files_count)):
             audio_file = audio_files[i]
             times = all_times[i]
@@ -127,4 +136,4 @@ class SpeechData(object):
             speech_data.save_fbank_as_binary()
             gc.collect()
 
-SpeechData.process_all_in_directory(r"H:\LibriSpeech\mp3")
+SpeechData.process_all_in_directory(r"E:\LibriSpeech\mp3")
