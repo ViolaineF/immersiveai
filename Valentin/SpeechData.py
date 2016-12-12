@@ -121,11 +121,16 @@ class SpeechData(object):
                 all_times.append(times)
             return all_times
 
+        print("Searching mp3 files in", dirpath)
         (audio_files, times_files, times_files_intro) = walk_into_librispeech(dirpath)
 
         files_count = len(audio_files) # should be equal to the number of time files
+        print("Found", files_count, "mp3 files,", len(times_files), "alignement files (plus", len(times_files_intro),"introduction aligment files) in", dirpath)
+        print("Processing alignement files...")
         all_times = get_all_times(times_files)
+        print("Alignement files processed !")
 
+        print("Writing preprocess order file...")
         process_order = ""
         for i in range(files_count):
             process_order += str(i) + ',' + audio_files[i] + ',' + times_files[i]
@@ -134,7 +139,9 @@ class SpeechData(object):
         process_order_file = open(os.path.join(dirpath, "process_order.txt"), 'w')
         process_order_file.write(process_order)
         process_order_file.close()
+        print("Preprocess order file written")
 
+        print("Starting main pre process loop ...")
         for i in tqdm(range(files_count)):
             audio_file = audio_files[i]
             times = all_times[i]
@@ -147,5 +154,6 @@ class SpeechData(object):
             speech_data = SpeechData(audio_file, times)
             speech_data.save_fbank_as_binary()
             gc.collect()
+        print("Job done !")
 
 SpeechData.process_all_in_directory(r"E:\LibriSpeech\mp3", check_for_existing_npy_file = True)
