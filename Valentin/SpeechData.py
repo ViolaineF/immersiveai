@@ -39,15 +39,21 @@ class SpeechData(object):
 
     def save_fbank_as_binary(self, filename=None):
         if filename is None:
-            if self.filename.endswith(".mp3") :
-                filename = self.filename.replace(".mp3", ".npy")
-            else:
-                filename += ".npy"
+            filename = self.get_npy_filename()
 
         np.save(filename, self.features)
 
     @staticmethod
-    def process_all_in_directory(dirpath:str, frame_rate = 16000):
+    def get_npy_filename(filename : str):
+        if filename.endswith(".mp3") :
+            filename = filename.replace(".mp3", ".npy")
+        else:
+            filename += ".npy"
+
+        return filename
+
+    @staticmethod
+    def process_all_in_directory(dirpath:str, frame_rate = 16000, check_for_existing_npy_file = False):
         if not os.path.isdir(dirpath):
             print(dirpath + " is not a valid directory. Aborting.")
             return
@@ -132,8 +138,14 @@ class SpeechData(object):
         for i in tqdm(range(files_count)):
             audio_file = audio_files[i]
             times = all_times[i]
+
+            if check_for_existing_npy_file:
+                npy_filename = SpeechData.get_npy_filename(audio_file)
+                if os.path.exists(npy_filename):
+                    continue
+
             speech_data = SpeechData(audio_file, times)
             speech_data.save_fbank_as_binary()
             gc.collect()
 
-SpeechData.process_all_in_directory(r"E:\LibriSpeech\mp3")
+SpeechData.process_all_in_directory(r"E:\LibriSpeech\mp3", check_for_existing_npy_file = True)
