@@ -191,6 +191,8 @@ class SpeechData(object):
                 for word in words_in_line:
                     if word.endswith("\'S"):
                         word = word[:-2]
+                    if word.endswith("\'"):
+                        word = word[:-1]
                     if not word in dictionnary:
                         dictionnary.append(word)
         print("Finished building dictionnary, found", len(dictionnary), "different words")
