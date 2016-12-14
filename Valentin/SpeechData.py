@@ -48,7 +48,7 @@ class SpeechData(object):
         if filename.endswith(".mp3") :
             filename = filename.replace(".mp3", ".npy")
         else:
-            filename += ".npy"
+            filename += ".sents.npy"
 
         return filename
 
@@ -71,13 +71,14 @@ class SpeechData(object):
                 intro_file = None
 
                 for file in files_in_directory:
-                    if file.endswith(".seg.txt") and not file.endswith(".sents.seg.txt"):
+                    if file.endswith(".sents.seg.txt"):
+                    #if file.endswith(".seg.txt") and not file.endswith(".sents.seg.txt"):
                         if "intro" in file:
                             intro_file = file
                         else:
                             base_file = file
 
-                assert (base_file != None), "Couldn't find xx-xx.seg.txt inside " + dirpath
+                assert (base_file != None), "Couldn't find xx-xx.sents.seg.txt inside " + dirpath
                 return (base_file, intro_file)
 
             audio_files = []
@@ -156,4 +157,55 @@ class SpeechData(object):
             gc.collect()
         print("Job done !")
 
-SpeechData.process_all_in_directory(r"E:\LibriSpeech\mp3", check_for_existing_npy_file = True)
+    @staticmethod
+    def is_spoken_text_filename(filename : str):
+        #return filename.endswith(".trans.txt") and not filename.endswith(".sents.trans.txt")
+        return filename.endswith(".sents.trans.txt")
+
+    @staticmethod
+    def gather_dictionnary(dirpath : str):
+        spoken_text_files = []
+
+        print("Looking for spoken books files (*.sents.trans.txt)")
+        for root, directories, filenames in os.walk(dirpath):
+            for filename in filenames:
+                if SpeechData.is_spoken_text_filename(filename):
+                    spoken_text_files.append(os.path.join(root,filename))
+        print("Found", len(spoken_text_files), "spoken books files")
+        
+        dictionnary = []
+        print("Building dictionnary ...")
+        for i in tqdm(range(len(spoken_text_files))):
+            filename = spoken_text_files[i]
+            file = open(filename, "r")
+            all_text = file.read()
+
+            lines = all_text.split('\n')
+            for line in lines:
+                split_index = line.find(' ') + 1
+                if split_index < 1:
+                    continue
+                words_in_line = line[split_index:]
+                words_in_line = words_in_line.split(' ')
+
+                for word in words_in_line:
+                    if word.endswith("\'S"):
+                        word = word[:-2]
+                    if not word in dictionnary:
+                        dictionnary.append(word)
+        print("Finished building dictionnary, found", len(dictionnary), "different words")
+        
+        output_string = ""
+        for i in tqdm(range(len(dictionnary))):
+            output_string += str(i) + ' ' + dictionnary[i]
+            if i < (len(dictionnary) - 1):
+                output_string += '\n'
+
+        print("Saving dictionnary under", os.path.join(dirpath, "dictionnary.txt"))
+
+        output_file = open(os.path.join(dirpath, "dictionnary.txt"), 'w')
+        output_file.write(output_string)        
+        output_file.close()      
+
+#SpeechData.process_all_in_directory(r"F:\LibriSpeech\mp3", check_for_existing_npy_file = True)
+SpeechData.gather_dictionnary(r"F:\LibriSpeech\mp3")
