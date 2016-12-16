@@ -156,69 +156,43 @@ def gather_dictionnary(dirpath : str):
     output_file.write(output_string)        
     output_file.close()
 
-#def dynamic_bucketing_preproc(dirpath : str, bucket_count : int):
-#    # NPY arrays
-#    mfcc_files = []
+def dynamic_bucketing_preproc(dirpath : str):
+    # NPY arrays
+    mfcc_files = []
 
-#    for root, directories, filenames in os.walk(dirpath):
-#        for filename in filenames:
-#            if filename.endswith(".npy"):
-#                mfcc_files.append(os.path.join(root, filename))
+    for root, directories, filenames in os.walk(dirpath):
+        for filename in filenames:
+            if filename.endswith(".npy"):
+                mfcc_files.append(os.path.join(root, filename))
 
-#    lenghts_dict = dict()
-#    for i in tqdm(range(len(mfcc_files))):
-#        mfcc_file = mfcc_files[i]
-#        mfcc_data = np.load(mfcc_file)
+    lenghts_dict = dict()
+    for i in tqdm(range(len(mfcc_files))):
+        mfcc_file = mfcc_files[i]
+        mfcc_data = np.load(mfcc_file)
 
-#        if i is 0:
-#            min_lenght = len(mfcc_data[0])
-#            max_lenght = min_lenght
+        for sentence_mfcc_data in mfcc_data:
+            sentence_lenght = len(sentence_mfcc_data)
+            if sentence_lenght in lenghts_dict:
+                lenghts_dict[sentence_lenght] += 1
+            else:
+                lenghts_dict[sentence_lenght] = 1
 
-#        if i is 50:
-#            break
+    lenghts_count = len(lenghts_dict)
+    lenghts = list(lenghts_dict)
 
-#        for sentence_mfcc_data in mfcc_data:
-#            sentence_lenght = len(sentence_mfcc_data)
-#            if sentence_lenght in lenghts_dict:
-#                lenghts_dict[sentence_lenght] += 1
-#            else:
-#                lenghts_dict[sentence_lenght] = 1
+    output_string = ""
+    for i in range(lenghts_count):
+        lenght = lenghts[i]
+        output_string += str(lenght) + "," + str(lenghts_dict[lenght])
+        if (i + 1) < lenghts_count:
+            output_string += "\n"
 
-#            min_lenght = min(sentence_lenght, min_lenght)
-#            max_lenght = max(sentence_lenght, min_lenght)
+    output_file = open(os.path.join(dirpath, "lenghts.txt"), 'w')
+    output_file.write(output_string)        
+    output_file.close()
 
-#    print(min_lenght, max_lenght)
-
-#    lenghts_count = len(lenghts_dict)
-#    lenghts = list(lenghts_dict)
-
-#    best_bucketing_scores = np.zeros([bucket_count, lenghts_count])
-#    previous_best_bucketing_scores = np.zeros([bucket_count, lenghts_count]).astype(int)
-
-#    for bucket_index in range(1, bucket_count):
-#        best_bucketing_scores[bucket_index][0] = math.inf
-
-#    for bucket_index in range(1, bucket_count):
-#        for i in range(1, lenghts_count):
-#            current_sum = lenghts[i]
-#            for j in range(i - 1, -1, -1):
-#                val = current_sum * i + best_bucketing_scores[bucket_index - 1][j]
-#                if val < best_bucketing_scores[bucket_index][i]:
-#                    print("truc")
-#                    best_bucketing_scores[bucket_index][i] = val
-#                    previous_best_bucketing_scores[bucket_index][i] = j
-#                current_sum += lenghts_dict[lenghts[j]]
-
-#    current_id = lenghts_count - 1
-#    bests = np.zeros(bucket_count).astype(int)
-    
-#    for bucket_index in range(bucket_count - 1, -1, -1):
-#        bests[bucket_index] = current_id
-#        current_id = previous_best_bucketing_scores[bucket_index][current_id]
-
-#    print(bests)
 
     # Sentences
 #SpeechDataPreprocess.process_all_in_directory(r"F:\LibriSpeech\mp3", check_for_existing_npy_file = True)
 #SpeechDataPreprocess.gather_dictionnary(r"F:\LibriSpeech\mp3")
-#dynamic_bucketing_preproc(r"H:\LibriSpeech\mp3", 6)
+dynamic_bucketing_preproc(r"F:\LibriSpeech\mp3")
