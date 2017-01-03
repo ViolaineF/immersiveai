@@ -116,7 +116,9 @@ def get_words_dictionnary(librispeech_path : str):
   for i in range(len(lines)):
     line = lines[i]
     id, word = line.split(' ')
-    dictionnary[word] = id
+    if word.endswith('\n'):
+      word = word[:-1]
+    dictionnary[word] = int(id)
 
   dictionnary_file.close()
 
@@ -189,21 +191,28 @@ def save_batch(librispeech_path : str, batch_id : int, mfcc_padded_length : int,
   transcripts_batch_output_file.close()
 
   transcripts_batch_lengths = np.array(transcripts_batch_lengths)
-  transcripts_batch_lengths_file_path = "transcripts_batch_lengths_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".txt"
+  transcripts_batch_lengths_file_path = "transcripts_batch_lengths_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".npy"
   transcripts_batch_lengths_file_path = os.path.join(batch_directory, transcripts_batch_lengths_file_path)
   np.save(transcripts_batch_lengths_file_path, transcripts_batch_lengths)
 
   tokenized_transcripts_batch = np.array(tokenized_transcripts_batch)
-  tokenized_transcripts_batch_file_path = "tokenized_transcripts_batch_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".txt"
+  tokenized_transcripts_batch_file_path = "tokenized_transcripts_batch_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".npy"
   tokenized_transcripts_batch_file_path = os.path.join(batch_directory, tokenized_transcripts_batch_file_path)
   np.save(tokenized_transcripts_batch_file_path, tokenized_transcripts_batch)
 
+  return batch_file_path, mfcc_batch_lengths_file_path, transcripts_batch_file_path, transcripts_batch_lengths_file_path, tokenized_transcripts_batch_file_path
+
 def tokenize_transcript(dictionary : dict, transcript : str, split_char = ' '):
   words = transcript.split(split_char)
+  
   transcript_length = len(words)
   result = []
   for i in range(transcript_length):
-    result.append(dictionary[words[i]])
+    word = words[i]
+    if word.endswith('\n'):
+      word = word[:-1]
+    if word in dictionary:
+      result.append(dictionary[word])
   return result
 
 def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, buckets = (150, 250, 500, 1000, 1500, 2000)):
@@ -254,7 +263,7 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
       transcript, transcript_length = get_transcript_from_file_and_index(transcript_file_path, sentence_index)
       transcripts_batch += [transcript]
       transcripts_batch_lengths += [transcript_length]
-      tokenized_transcripts_batch + [tokenize_transcript(word_dictionary, transcript)]
+      tokenized_transcripts_batch += [tokenize_transcript(word_dictionary, transcript)]
 
       test_ratio += mfcc_length / transcript_length
 
@@ -270,8 +279,8 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
       mfcc_batch[j] = np.lib.pad(sentence_mfcc, ((0, pad_length), (0,0)), 'constant', constant_values=0)
 
     # Saving (data and metadata)
-    save_batch(librispeech_path, batch_id, mfcc_padded_length, mfcc_batch, mfcc_batch_lengths, transcripts_batch, transcripts_batch_lengths)
-    batches_infos += str(mfcc_padded_length) + ' ' + batch_file_path + ' ' + mfcc_batch_length_file_path + ' ' + transcripts_batch_file_path + '\n'
+    batch_file_path, mfcc_batch_lengths_file_path, transcripts_batch_file_path, transcripts_batch_lengths_file_path, tokenized_transcripts_batch_file_path = save_batch(librispeech_path, batch_id, mfcc_padded_length, mfcc_batch, mfcc_batch_lengths, transcripts_batch, transcripts_batch_lengths, tokenized_transcripts_batch)
+    batches_infos += str(mfcc_padded_length) + ' ' + batch_file_path + ' ' + mfcc_batch_lengths_file_path + ' ' + transcripts_batch_file_path + ' ' + transcripts_batch_lengths_file_path + ' ' + tokenized_transcripts_batch_file_path + '\n'
 
     # Iteration
     i += batch_size
@@ -282,8 +291,8 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
   batches_infos_output_file.close()
 
 def main():
-  librispeech_path = r"D:\tmp\LibriSpeech"
-  create_batches_of_sequences(librispeech_path)
+  librispeech_path = r"E:\LibriSpeech"
+  create_batches_of_sequences(librispeech_path, batch_size = 5000)
 
 if __name__ == '__main__':
   main()
