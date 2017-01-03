@@ -4,17 +4,17 @@ import functools
 from SpeechDataUtils import SpeechDataUtils
 
 def define_scope(function):
-    attribute = '_cache_' + function.__name__
+  attribute = '_cache_' + function.__name__
 
-    @property
-    @functools.wraps(function)
-    def decorator(self):
-        if not hasattr(self, attribute):
-            with tf.variable_scope(function.__name__):
-                setattr(self, attribute, function(self))
-        return getattr(self, attribute)
+  @property
+  @functools.wraps(function)
+  def decorator(self):
+    if not hasattr(self, attribute):
+      with tf.variable_scope(function.__name__):
+        setattr(self, attribute, function(self))
+    return getattr(self, attribute)
 
-    return decorator
+  return decorator
 
 class SimpleLSTMOptions(object):
   def __init__(self,

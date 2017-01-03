@@ -133,11 +133,12 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
   while i < sentence_count:
     batch_of_sentence_infos = sentence_lengths[i:min(i + batch_size, sentence_count - 1)]
     batch = []
+    batch_sentence_lengths = []
     max_length_in_batch = 0
     # Main Loop : Gathering data + determination of max length
     print("Starting batch n°" + str(batch_id) + "...")
     for j in tqdm(range(len(batch_of_sentence_infos))):
-      [file_index, sentence_index, _] = batch_of_sentence_infos[j]
+      [file_index, sentence_index, sentence_length] = batch_of_sentence_infos[j]
       file_path = librispeech_path + preprocess_order[file_index][1]
       sentences_mfcc_in_file = np.load(file_path)
       sentence_mfcc = sentences_mfcc_in_file[sentence_index]
@@ -145,6 +146,7 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
       max_length_in_batch = max(max_length_in_batch, len(sentence_mfcc))
       # Data
       batch.append(sentence_mfcc)
+      batch_sentence_lengths.append(sentence_length)
 
     # Choice of bucket (and padding size)
     padded_length = max_length_in_batch
@@ -165,7 +167,12 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
     batch = np.array(batch)
     batch_file_path = r"\batches\batch_" + str(batch_id) + "_l" + str(padded_length) + ".npy"
     np.save(librispeech_path + batch_file_path, batch)
-    batches_infos += padded_length + ' ' + batch_file_path + '\n'
+
+    batch_sentence_lengths = np.array(batch_sentence_lengths)
+    batch_sentence_lengths_file_path = r"\batches\batch_sentence_lengths_" + str(batch_id) + "_l" + str(padded_length) + ".npy"
+    np.save(librispeech_path + batch_sentence_length_file_path, batch_sentence_lengths)
+
+    batches_infos += padded_length + ' ' + batch_file_path + ' ' + batch_sentence_length_file_path + '\n'
 
     # Iteration
     i += batch_size
