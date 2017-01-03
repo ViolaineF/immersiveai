@@ -8,7 +8,7 @@ from tqdm import tqdm
 import time
 
 class SpeechDataUtils(object):
-  def __init__(self, librispeech_path = r"D:\tmp\LibriSpeech\mp3"):
+  def __init__(self, librispeech_path = r"D:\tmp\LibriSpeech"):
     self.librispeech_path = librispeech_path
     self.preprocess_order = get_preprocess_order(librispeech_path)
 
@@ -116,7 +116,7 @@ def get_words_dictionnary(librispeech_path : str):
   for i in range(len(lines)):
     line = lines[i]
     id, word = line.split(' ')
-    dictionnary[id] = word
+    dictionnary[word] = id
 
   dictionnary_file.close()
 
@@ -155,7 +155,7 @@ def get_mfcc_from_file_and_index(sentences_mfcc_file_path : str, sentence_index 
   sentences_mfcc_in_file = np.load(sentences_mfcc_file_path)
   sentence_mfcc = sentences_mfcc_in_file[sentence_index]
 
-  return (sentence_mfcc, max_length_in_batch)
+  return sentence_mfcc
 
 def get_best_bucket(length : int, buckets : list):
   for bucket in buckets:
@@ -166,7 +166,8 @@ def get_best_bucket(length : int, buckets : list):
     length = buckets[-1]
   return length
 
-def save_batch(librispeech_path : str, batch_id : int, mfcc_padded_length : int, mfcc_batch, mfcc_batch_lengths, transcripts_batch, transcripts_batch_lengths):
+def save_batch(librispeech_path : str, batch_id : int, mfcc_padded_length : int, mfcc_batch, 
+               mfcc_batch_lengths : list, transcripts_batch : list, transcripts_batch_lengths : list, tokenized_transcripts_batch : list):
   batch_directory = librispeech_path + r"\batches"
   ### MFCC
   mfcc_batch = np.array(mfcc_batch)
@@ -178,7 +179,7 @@ def save_batch(librispeech_path : str, batch_id : int, mfcc_padded_length : int,
   mfcc_batch_lengths = np.array(mfcc_batch_lengths)
   mfcc_batch_lengths_file_path = "mfcc_batch_lengths_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".npy"
   mfcc_batch_lengths_file_path = os.path.join(batch_directory, mfcc_batch_lengths_file_path)
-  np.save(mfcc_batch_length_file_path, mfcc_batch_lengths)
+  np.save(mfcc_batch_lengths_file_path, mfcc_batch_lengths)
 
   ### Transcript
   transcripts_batch_file_path = "transcripts_batch_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".txt"
@@ -187,15 +188,28 @@ def save_batch(librispeech_path : str, batch_id : int, mfcc_padded_length : int,
   transcripts_batch_output_file.writelines(transcripts_batch)        
   transcripts_batch_output_file.close()
 
+  transcripts_batch_lengths = np.array(transcripts_batch_lengths)
   transcripts_batch_lengths_file_path = "transcripts_batch_lengths_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".txt"
   transcripts_batch_lengths_file_path = os.path.join(batch_directory, transcripts_batch_lengths_file_path)
-  transcripts_batch_lengths_output_file = open(transcripts_batch_lengths_file_path, 'w')
-  transcripts_batch_lengths_output_file.writelines(transcripts_batch_lengths)        
-  transcripts_batch_lengths_output_file.close()
+  np.save(transcripts_batch_lengths_file_path, transcripts_batch_lengths)
+
+  tokenized_transcripts_batch = np.array(tokenized_transcripts_batch)
+  tokenized_transcripts_batch_file_path = "tokenized_transcripts_batch_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".txt"
+  tokenized_transcripts_batch_file_path = os.path.join(batch_directory, tokenized_transcripts_batch_file_path)
+  np.save(tokenized_transcripts_batch_file_path, tokenized_transcripts_batch)
+
+def tokenize_transcript(dictionary : dict, transcript : str, split_char = ' '):
+  words = transcript.split(split_char)
+  transcript_length = len(words)
+  result = []
+  for i in range(transcript_length):
+    result.append(dictionary[words[i]])
+  return result
 
 def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, buckets = (150, 250, 500, 1000, 1500, 2000)):
   preprocess_order = get_preprocess_order(librispeech_path)
   mfcc_lengths = get_mfcc_lengths(librispeech_path)
+  word_dictionary = get_words_dictionnary(librispeech_path)
 
   sentence_count = len(mfcc_lengths)
   i = 0
@@ -213,6 +227,7 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
     # Transcripts
     transcripts_batch = []
     transcripts_batch_lengths = []
+    tokenized_transcripts_batch = []
 
     max_mfcc_length_in_batch = 0
 
@@ -230,21 +245,23 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
       mfcc_batch.append(sentence_mfcc)
 
       ### Length
-      max_mfcc_length_in_batch = max(max_length_in_batch, mfcc_length)
+      max_mfcc_length_in_batch = max(max_mfcc_length_in_batch, mfcc_length)
       mfcc_batch_lengths.append(mfcc_length)
 
       ### Text
       transcript_file_path = librispeech_path + preprocess_order[file_index][2]
+      transcript_file_path = transcript_file_path.replace("seg", "trans")
       transcript, transcript_length = get_transcript_from_file_and_index(transcript_file_path, sentence_index)
       transcripts_batch += [transcript]
       transcripts_batch_lengths += [transcript_length]
+      tokenized_transcripts_batch + [tokenize_transcript(word_dictionary, transcript)]
 
       test_ratio += mfcc_length / transcript_length
 
     print("test ratio", batch_id, "=", test_ratio / len(batch_of_mfcc_infos))
 
     # Choice of bucket (and padding size)
-    mfcc_padded_length = get_best_bucket(max_length_in_batch, buckets)
+    mfcc_padded_length = get_best_bucket(max_mfcc_length_in_batch, buckets)
 
     # Padding
     for j in tqdm(range(len(batch_of_mfcc_infos))):
