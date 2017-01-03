@@ -156,43 +156,80 @@ def gather_dictionnary(dirpath : str):
     output_file.write(output_string)        
     output_file.close()
 
-def dynamic_bucketing_preproc(dirpath : str):
-    # NPY arrays
-    mfcc_files = []
+#def dynamic_bucketing_preproc(dirpath : str):
+#    # NPY arrays
+#    mfcc_files = []
 
-    for root, directories, filenames in os.walk(dirpath):
-        for filename in filenames:
-            if filename.endswith(".npy"):
-                mfcc_files.append(os.path.join(root, filename))
+#    for root, directories, filenames in os.walk(dirpath):
+#        for filename in filenames:
+#            if filename.endswith(".npy"):
+#                mfcc_files.append(os.path.join(root, filename))
 
-    lenghts_dict = dict()
-    for i in tqdm(range(len(mfcc_files))):
-        mfcc_file = mfcc_files[i]
-        mfcc_data = np.load(mfcc_file)
+#    lenghts_dict = dict()
+#    for i in tqdm(range(len(mfcc_files))):
+#        mfcc_file = mfcc_files[i]
+#        mfcc_data = np.load(mfcc_file)
 
-        for sentence_mfcc_data in mfcc_data:
-            sentence_lenght = len(sentence_mfcc_data)
-            if sentence_lenght in lenghts_dict:
-                lenghts_dict[sentence_lenght] += 1
-            else:
-                lenghts_dict[sentence_lenght] = 1
+#        for sentence_mfcc_data in mfcc_data:
+#            sentence_lenght = len(sentence_mfcc_data)
+#            if sentence_lenght in lenghts_dict:
+#                lenghts_dict[sentence_lenght] += 1
+#            else:
+#                lenghts_dict[sentence_lenght] = 1
 
-    lenghts_count = len(lenghts_dict)
-    lenghts = list(lenghts_dict)
+#    lenghts_count = len(lenghts_dict)
+#    lenghts = list(lenghts_dict)
 
-    output_string = ""
-    for i in range(lenghts_count):
-        lenght = lenghts[i]
-        output_string += str(lenght) + "," + str(lenghts_dict[lenght])
-        if (i + 1) < lenghts_count:
-            output_string += "\n"
+#    output_string = ""
+#    for i in range(lenghts_count):
+#        lenght = lenghts[i]
+#        output_string += str(lenght) + "," + str(lenghts_dict[lenght])
+#        if (i + 1) < lenghts_count:
+#            output_string += "\n"
 
-    output_file = open(os.path.join(dirpath, "lenghts.txt"), 'w')
-    output_file.write(output_string)        
-    output_file.close()
+#    output_file = open(os.path.join(dirpath, "lenghts.txt"), 'w')
+#    output_file.write(output_string)        
+#    output_file.close()
 
 
     # Sentences
 #SpeechDataPreprocess.process_all_in_directory(r"F:\LibriSpeech\mp3", check_for_existing_npy_file = True)
 #SpeechDataPreprocess.gather_dictionnary(r"F:\LibriSpeech\mp3")
-dynamic_bucketing_preproc(r"F:\LibriSpeech\mp3")
+#dynamic_bucketing_preproc(r"F:\LibriSpeech\mp3")
+
+def pad_batches(dirpath : str):
+  # NPY arrays
+  mfcc_files = []
+
+  for root, directories, filenames in os.walk(dirpath):
+      for filename in filenames:
+          if filename.endswith(".npy"):
+              mfcc_files.append(os.path.join(root, filename))
+
+  lenghts_dict = dict()
+  for i in tqdm(range(len(mfcc_files))):
+      mfcc_file = mfcc_files[i]
+      mfcc_data = np.load(mfcc_file)
+
+      for sentence_mfcc_data in mfcc_data:
+          sentence_lenght = len(sentence_mfcc_data)
+          if sentence_lenght in lenghts_dict:
+              lenghts_dict[sentence_lenght] += 1
+          else:
+              lenghts_dict[sentence_lenght] = 1
+
+  lenghts_count = len(lenghts_dict)
+  lenghts = list(lenghts_dict)
+
+  output_string = ""
+  for i in range(lenghts_count):
+      lenght = lenghts[i]
+      output_string += str(lenght) + "," + str(lenghts_dict[lenght])
+      if (i + 1) < lenghts_count:
+          output_string += "\n"
+
+  output_file = open(os.path.join(dirpath, "lenghts.txt"), 'w')
+  output_file.write(output_string)        
+  output_file.close()
+
+pad_batches(r"D:\tmp\LibriSpeech\batches")
