@@ -68,15 +68,15 @@ def get_preprocess_order(librispeech_path : str):
 
   return preprocess_order
 
-def get_sequences_lengths(librispeech_path : str, save_to_file = True, sort_lengths = True, force_process = False):
+def get_mfcc_lengths(librispeech_path : str, save_to_file = True, sort_lengths = True, force_process = False):
   # Retrieve existing file
-  sentence_lengths_file = os.path.join(librispeech_path, "sentence_lengths.npy")
-  sentence_lengths = None
+  mfcc_lengths_file = os.path.join(librispeech_path, "mfcc_lengths.npy")
+  mfcc_lengths = None
 
-  if not force_process and os.path.exists(sentence_lengths_file):
-    sentence_lengths = np.load(sentence_lengths_file)
-    print("Found existing list of sequences lengths with", len(sentence_lengths), "sentences.")
-    return sentence_lengths
+  if not force_process and os.path.exists(mfcc_lengths_file):
+    mfcc_lengths = np.load(mfcc_lengths_file)
+    print("Found existing list of mfcc lengths with", len(mfcc_lengths), "sentences.")
+    return mfcc_lengths
 
   preprocess_order = get_preprocess_order(librispeech_path)
   # If force to (re)process or if file is not found, process
@@ -87,20 +87,20 @@ def get_sequences_lengths(librispeech_path : str, save_to_file = True, sort_leng
 
     sentence_count = len(mfcc)
     for sentence_index in range(sentence_count):
-      sentence_length = len(mfcc[sentence_index])
-      sentence_info = [file_index, sentence_index, sentence_length]
+      mfcc_length = len(mfcc[sentence_index])
+      sentence_info = [file_index, sentence_index, mfcc_length]
 
-      if sentence_lengths is None:
-        sentence_lengths = np.array(sentence_info)
+      if mfcc_lengths is None:
+        mfcc_lengths = np.array(sentence_info)
       else:
-        sentence_lengths = np.vstack([sentence_lengths, sentence_info])
+        mfcc_lengths = np.vstack([mfcc_lengths, sentence_info])
   
-  sentence_lengths = sentence_lengths[sentence_lengths[:,2].argsort()]
+  mfcc_lengths = mfcc_lengths[mfcc_lengths[:,2].argsort()]
 
   if save_to_file:
-    np.save(sentence_lengths_file, sentence_lengths)
+    np.save(mfcc_lengths_file, mfcc_lengths)
 
-  return sentence_lengths
+  return mfcc_lengths
 
 def get_batches_files(librispeech_path : str):
   pass
@@ -118,61 +118,143 @@ def get_words_dictionnary(librispeech_path : str):
     id, word = line.split(' ')
     dictionnary[id] = word
 
+  dictionnary_file.close()
+
   return dictionnary
+
+def get_transcript_from_file_and_index(transcript_file_path : str, sentence_index : int):
+    transcript_file = open(transcript_file_path, 'r')
+    transcript_lines = transcript_file.readlines()
+    transcript_line = transcript_lines[sentence_index]
+    transcript_file.close()
+
+    # Parsing
+    split_index = transcript_line.find(' ') + 1
+
+    words_in_line = transcript_line[split_index:]
+    words_in_line = words_in_line.split(' ')
+    words_count_in_line = len(words_in_line)
+
+    transcript = ' '
+
+    for word_index in range(words_count_in_line):
+      word = words_in_line[word_index]
+
+      if word.endswith("\'S"):
+        word = word[:-2]
+      if word.endswith("\'"):
+        word = word[:-1]
+
+      transcript += word
+      if (word_index + 1) != words_count_in_line:
+        transcript += ' '
+
+    return transcript, words_count_in_line
+
+def get_mfcc_from_file_and_index(sentences_mfcc_file_path : str, sentence_index : int):
+  sentences_mfcc_in_file = np.load(sentences_mfcc_file_path)
+  sentence_mfcc = sentences_mfcc_in_file[sentence_index]
+
+  return (sentence_mfcc, max_length_in_batch)
+
+def get_best_bucket(length : int, buckets : list):
+  for bucket in buckets:
+    if(length <= bucket):
+      length = bucket
+      break
+  if(length > buckets[-1]):
+    length = buckets[-1]
+  return length
+
+def save_batch(librispeech_path : str, batch_id : int, mfcc_padded_length : int, mfcc_batch, mfcc_batch_lengths, transcripts_batch, transcripts_batch_lengths):
+  batch_directory = librispeech_path + r"\batches"
+  ### MFCC
+  mfcc_batch = np.array(mfcc_batch)
+  batch_file_path = "mfcc_batch" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".npy"
+  batch_file_path = os.path.join(batch_directory, batch_file_path)
+  np.save(batch_file_path, mfcc_batch)
+
+  ### Lengths
+  mfcc_batch_lengths = np.array(mfcc_batch_lengths)
+  mfcc_batch_lengths_file_path = "mfcc_batch_lengths_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".npy"
+  mfcc_batch_lengths_file_path = os.path.join(batch_directory, mfcc_batch_lengths_file_path)
+  np.save(mfcc_batch_length_file_path, mfcc_batch_lengths)
+
+  ### Transcript
+  transcripts_batch_file_path = "transcripts_batch_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".txt"
+  transcripts_batch_file_path = os.path.join(batch_directory, transcripts_batch_file_path)
+  transcripts_batch_output_file = open(transcripts_batch_file_path, 'w')
+  transcripts_batch_output_file.writelines(transcripts_batch)        
+  transcripts_batch_output_file.close()
+
+  transcripts_batch_lengths_file_path = "transcripts_batch_lengths_" + str(batch_id) + "_l" + str(mfcc_padded_length) + ".txt"
+  transcripts_batch_lengths_file_path = os.path.join(batch_directory, transcripts_batch_lengths_file_path)
+  transcripts_batch_lengths_output_file = open(transcripts_batch_lengths_file_path, 'w')
+  transcripts_batch_lengths_output_file.writelines(transcripts_batch_lengths)        
+  transcripts_batch_lengths_output_file.close()
 
 def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, buckets = (150, 250, 500, 1000, 1500, 2000)):
   preprocess_order = get_preprocess_order(librispeech_path)
-  sentence_lengths = get_sequences_lengths(librispeech_path)
+  mfcc_lengths = get_mfcc_lengths(librispeech_path)
 
-  sentence_count = len(sentence_lengths)
+  sentence_count = len(mfcc_lengths)
   i = 0
   batch_id = 0
 
   batches_infos = ""
 
   while i < sentence_count:
-    batch_of_sentence_infos = sentence_lengths[i:min(i + batch_size, sentence_count - 1)]
-    batch = []
-    batch_sentence_lengths = []
-    max_length_in_batch = 0
+    batch_of_mfcc_infos = mfcc_lengths[i:min(i + batch_size, sentence_count - 1)]
+
+    # MFCC
+    mfcc_batch = []
+    mfcc_batch_lengths = []
+
+    # Transcripts
+    transcripts_batch = []
+    transcripts_batch_lengths = []
+
+    max_mfcc_length_in_batch = 0
+
+    test_ratio = 0
+
     # Main Loop : Gathering data + determination of max length
     print("Starting batch n°" + str(batch_id) + "...")
-    for j in tqdm(range(len(batch_of_sentence_infos))):
-      [file_index, sentence_index, sentence_length] = batch_of_sentence_infos[j]
-      file_path = librispeech_path + preprocess_order[file_index][1]
-      sentences_mfcc_in_file = np.load(file_path)
-      sentence_mfcc = sentences_mfcc_in_file[sentence_index]
-      # Max Length
-      max_length_in_batch = max(max_length_in_batch, len(sentence_mfcc))
-      # Data
-      batch.append(sentence_mfcc)
-      batch_sentence_lengths.append(sentence_length)
+
+    for j in tqdm(range(len(batch_of_mfcc_infos))):
+      [file_index, sentence_index, mfcc_length] = batch_of_mfcc_infos[j]
+
+      ### MFCC
+      sentences_mfcc_file_path = librispeech_path + preprocess_order[file_index][1]
+      sentence_mfcc = get_mfcc_from_file_and_index(sentences_mfcc_file_path, sentence_index)
+      mfcc_batch.append(sentence_mfcc)
+
+      ### Length
+      max_mfcc_length_in_batch = max(max_length_in_batch, mfcc_length)
+      mfcc_batch_lengths.append(mfcc_length)
+
+      ### Text
+      transcript_file_path = librispeech_path + preprocess_order[file_index][2]
+      transcript, transcript_length = get_transcript_from_file_and_index(transcript_file_path, sentence_index)
+      transcripts_batch += [transcript]
+      transcripts_batch_lengths += [transcript_length]
+
+      test_ratio += mfcc_length / transcript_length
+
+    print("test ratio", batch_id, "=", test_ratio / len(batch_of_mfcc_infos))
 
     # Choice of bucket (and padding size)
-    padded_length = max_length_in_batch
-    for bucket in buckets:
-      if(padded_length <= bucket):
-        padded_length = bucket
-        break
-    if(padded_length > buckets[-1]):
-      padded_length = buckets[-1]
+    mfcc_padded_length = get_best_bucket(max_length_in_batch, buckets)
 
     # Padding
-    for j in tqdm(range(len(batch_of_sentence_infos))):
-      sentence_mfcc = batch[j]
-      pad_length = padded_length - len(sentence_mfcc)
-      batch[j] = np.lib.pad(sentence_mfcc, ((0, pad_length), (0,0)), 'constant', constant_values=0)
+    for j in tqdm(range(len(batch_of_mfcc_infos))):
+      sentence_mfcc = mfcc_batch[j]
+      pad_length = mfcc_padded_length - len(sentence_mfcc)
+      mfcc_batch[j] = np.lib.pad(sentence_mfcc, ((0, pad_length), (0,0)), 'constant', constant_values=0)
 
     # Saving (data and metadata)
-    batch = np.array(batch)
-    batch_file_path = r"\batches\batch_" + str(batch_id) + "_l" + str(padded_length) + ".npy"
-    np.save(librispeech_path + batch_file_path, batch)
-
-    batch_sentence_lengths = np.array(batch_sentence_lengths)
-    batch_sentence_lengths_file_path = r"\batches\batch_sentence_lengths_" + str(batch_id) + "_l" + str(padded_length) + ".npy"
-    np.save(librispeech_path + batch_sentence_length_file_path, batch_sentence_lengths)
-
-    batches_infos += padded_length + ' ' + batch_file_path + ' ' + batch_sentence_length_file_path + '\n'
+    save_batch(librispeech_path, batch_id, mfcc_padded_length, mfcc_batch, mfcc_batch_lengths, transcripts_batch, transcripts_batch_lengths)
+    batches_infos += str(mfcc_padded_length) + ' ' + batch_file_path + ' ' + mfcc_batch_length_file_path + ' ' + transcripts_batch_file_path + '\n'
 
     # Iteration
     i += batch_size
@@ -188,17 +270,3 @@ def main():
 
 if __name__ == '__main__':
   main()
-  #sentence_lengths = np.load(r"D:\tmp\LibriSpeech\mp3\sentence_lengths.npy")
-
-
-
-  #result = ""
-
-  #for i in tqdm(range(len(sentence_lengths))):
-  #  result += str(sentence_lengths[i][2])
-  #  if (i + 1) < len(sentence_lengths):
-  #    result += '\n'
-  
-  #f = open(r"D:\tmp\LibriSpeech\mp3\sentence_lengths.csv", 'w')
-  #f.write(result)
-  #f.close()
