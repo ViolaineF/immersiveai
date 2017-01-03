@@ -4,17 +4,21 @@ from threading import Thread
 from asyncio import Queue
 from asyncio import StreamReader
 from tqdm import tqdm
+import random
 
 import time
 
 class SpeechDataUtils(object):
-  def __init__(self, librispeech_path = r"D:\tmp\LibriSpeech"):
+  def __init__(self, librispeech_path = r"D:\tmp\LibriSpeech", bucket_size = 150):
     self.librispeech_path = librispeech_path
     self.preprocess_order = get_preprocess_order(librispeech_path)
 
     self.features_count = 40
+    self.bucket_size = bucket_size
+
     self.dictionnary = get_words_dictionnary(librispeech_path)
     self.dictionnary_size = len(self.dictionnary)
+    self.batches_info = get_batches_info(librispeech_path)
 
     self.preloaded_batches = Queue()
 
@@ -26,19 +30,30 @@ class SpeechDataUtils(object):
   def _preload_batch_coroutine(self, batch_size : int):
     # (Input, Lengths, Output)
 
+    batch_files_from_bucket = self.batches_info[self.bucket_size]
+
+    batch_files_from_bucket_count = len(batch_files_from_bucket)
+
     inputs = []
     lengths = []
     outputs = []
 
-    for i in range(batch_size):
+    selected_file = random.randint(0, batch_files_from_bucket_count - 1)
+    selected_file = batch_files_from_bucket[selected_file]
+    mfcc_batch_file_path, mfcc_batch_lengths_file_path, \
+      _, _, \
+      tokenized_transcripts_batch_file_path = selected_file
 
-      input_data = np.zeros((100, 40))
-      length_data = 1
-      output_data = np.zeros((10)).astype(int)
+    mfcc_batch = np.load(mfcc_batch_file_path)
+    mfcc_lenghts_batch = np.load(mfcc_batch_lengths_file_path)
+    tokenized_transcripts_batch = np.load(tokenized_transcripts_batch_file_path)
 
-      inputs += [input_data]
-      lengths += [length_data]
-      outputs += [output_data]
+    complete_batch_size = len(mfcc_batch)
+    selected_range = random.randint(0, complete_batch_size - batch_size - 1)
+
+    inputs = mfcc_batch[selected_range:selected_range + batch_size]
+    lengths = mfcc_lenghts_batch[selected_range:selected_range + batch_size]
+    outputs = tokenized_transcripts_batch[selected_range:selected_range + batch_size]
 
     batch = (inputs, lengths, outputs)
     self.preloaded_batches.put_nowait(batch)
@@ -102,8 +117,32 @@ def get_mfcc_lengths(librispeech_path : str, save_to_file = True, sort_lengths =
 
   return mfcc_lengths
 
-def get_batches_files(librispeech_path : str):
-  pass
+def get_batches_info(librispeech_path : str):
+  batches_info_file = open(os.path.join(librispeech_path, "batches_infos.txt"), 'r')
+  batches_info_astext = batches_info_file.readlines()
+  batches_count = len(batches_info_astext)
+
+  batches_info = dict()
+  for i in range(batches_count):
+    splitted_infos = batches_info_astext[i].split(',')
+    mfcc_padded_length, \
+      batch_file_path, mfcc_batch_lengths_file_path, \
+      transcripts_batch_file_path, transcripts_batch_lengths_file_path, \
+      tokenized_transcripts_batch_file_path = splitted_infos
+
+    mfcc_padded_length = int(mfcc_padded_length)
+    splitted_infos = splitted_infos[1:]
+
+    if mfcc_padded_length not in batches_info:
+      batches_info[mfcc_padded_length] = [splitted_infos]
+    else:
+      tmp = batches_info[mfcc_padded_length]
+      tmp += [splitted_infos]
+      batches_info[mfcc_padded_length] = tmp
+  return batches_info
+
+
+  #str(mfcc_padded_length) + ' ' + batch_file_path + ' ' + mfcc_batch_lengths_file_path + ' ' + transcripts_batch_file_path + ' ' + transcripts_batch_lengths_file_path + ' ' + tokenized_transcripts_batch_file_path
 
 def get_words_dictionnary(librispeech_path : str):
   # Retrieve existing file
@@ -280,7 +319,10 @@ def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, bucke
 
     # Saving (data and metadata)
     batch_file_path, mfcc_batch_lengths_file_path, transcripts_batch_file_path, transcripts_batch_lengths_file_path, tokenized_transcripts_batch_file_path = save_batch(librispeech_path, batch_id, mfcc_padded_length, mfcc_batch, mfcc_batch_lengths, transcripts_batch, transcripts_batch_lengths, tokenized_transcripts_batch)
-    batches_infos += str(mfcc_padded_length) + ' ' + batch_file_path + ' ' + mfcc_batch_lengths_file_path + ' ' + transcripts_batch_file_path + ' ' + transcripts_batch_lengths_file_path + ' ' + tokenized_transcripts_batch_file_path + '\n'
+    batches_infos += str(mfcc_padded_length) + ',' + \
+      batch_file_path + ',' + mfcc_batch_lengths_file_path + ',' + \
+      transcripts_batch_file_path + ',' + transcripts_batch_lengths_file_path + ',' + \
+      tokenized_transcripts_batch_file_path + '\n'
 
     # Iteration
     i += batch_size

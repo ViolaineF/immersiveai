@@ -22,7 +22,8 @@ class CLDNNModel:
                 learning_rate = 1e-4,
                 conv_kernel_size = 5, conv_features_count = 32,
                 dimension_reduction_output_size = 256,
-                lstm1_hidden_units_count = 512, lstm2_hidden_units_count = 512
+                lstm1_hidden_units_count = 512, lstm2_hidden_units_count = 512,
+                fully_connected1_size = 256
                 ):
     self.input_placeholder = input_placeholder
     self.output_placeholder = output_placeholder
@@ -43,6 +44,8 @@ class CLDNNModel:
     self.lstm1_hidden_units_count = lstm1_hidden_units_count
     self.lstm2_hidden_units_count = lstm2_hidden_units_count
 
+    self.fully_connected1_size = fully_connected1_size
+
     self.prediction
     self.optimize
     self.accuracy
@@ -53,43 +56,64 @@ class CLDNNModel:
 
     # 1st Layer (Convolution)
     ## Weights & Bias
-    weights_conv_layer = CLDNNModel.weight_variable([self.conv_kernel_size, self.conv_kernel_size, 1, self.conv_features_count])
-    bias_conv_layer = CLDNNModel.bias_variable([self.conv_features_count])
-    ## Result
-    conv_layer = CLDNNModel.conv2d(input_as_2d_tensor, weights_conv_layer) + bias_conv_layer
-    print(conv_layer)
-    relu_conv_layer = tf.nn.relu(conv_layer)
+    with tf.name_scope("Convolution"):
+      weights_conv_layer = CLDNNModel.weight_variable([self.conv_kernel_size, self.conv_kernel_size, 1, self.conv_features_count])
+      bias_conv_layer = CLDNNModel.bias_variable([self.conv_features_count])
+      ## Result
+      conv_layer = CLDNNModel.conv2d(input_as_2d_tensor, weights_conv_layer) + bias_conv_layer
+      relu_conv_layer = tf.nn.relu(conv_layer)
 
     # 2nd Layer (Max Pooling)
-    max_pool_layer = CLDNNModel.max_pool_1x2(relu_conv_layer)
-    print(max_pool_layer)
+    with tf.name_scope("Max_pooling"):
+      max_pool_layer = CLDNNModel.max_pool_1x2(relu_conv_layer)
 
     # 3rd Layer (Dimension reduction)
     ## Flattening (from 2D to 1D)
-    convoluted_size = int(self.input_width / 2) * int(self.input_height)
-    flatten_size = convoluted_size * self.conv_features_count
-    max_pool_layer_flatten = tf.reshape(max_pool_layer, [-1, flatten_size])
-    ## Weights and Bias
-    weights_dim_red_layer = CLDNNModel.weight_variable([flatten_size, self.dimension_reduction_output_size])
-    bias_dim_red_layer = CLDNNModel.bias_variable([self.dimension_reduction_output_size])
-    ## Result
-    dim_red_layer = tf.matmul(max_pool_layer_flatten, weights_dim_red_layer) + bias_dim_red_layer
+    with tf.name_scope("Dim_reduction"):
+      convoluted_size = int(self.input_width / 2) * int(self.input_height)
+      flatten_size = convoluted_size * self.conv_features_count
+      max_pool_layer_flatten = tf.reshape(max_pool_layer, [-1, flatten_size])
+      ## Weights and Bias
+      weights_dim_red_layer = CLDNNModel.weight_variable([flatten_size, self.dimension_reduction_output_size])
+      bias_dim_red_layer = CLDNNModel.bias_variable([self.dimension_reduction_output_size])
+      ## Result
+      dim_red_layer = tf.matmul(max_pool_layer_flatten, weights_dim_red_layer) + bias_dim_red_layer
 
     # 4th Layer (Concatenation)
-    concatenation_layer = tf.concat(1, [dim_red_layer, self.input_placeholder])
+    with tf.name_scope("Concatenation"):
+      concatenation_layer = tf.concat(1, [dim_red_layer, self.input_placeholder])
+      print(concatenation_layer)
+      exit()
 
     # 5th Layer (LSTM 1)
-    lstm_cell = tf.nn.rnn_cell.LSTMCell(self.lstm1_hidden_units_count)
-    lstm_output, lstm_state = tf.nn.rnn(lstm_cell, concatenation_layer, dtype=tf.float32)
-    print(lstm_output)
+    with tf.name_scope("LSTM1"):
+      lstm_cell = tf.nn.rnn_cell.LSTMCell(self.lstm1_hidden_units_count)
+      lstm1_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, concatenation_layer, dtype=tf.float32)
 
     # 6th Layer (LSTM 2)
+    with tf.name_scope("LSTM2"):
+      lstm_cell = tf.nn.rnn_cell.LSTMCell(self.lstm2_hidden_units_count)
+      lstm2_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, lstm1_output, dtype=tf.float32)
+
+    lstm2_output_shape = lstm2_output.get_shape()
+    lstm2_output_shape = [-1, int(lstm2_output_shape[1] * lstm2_output_shape[2])]
+    lstm2_output_reshaped = tf.reshape(lstm2_output, lstm2_output_shape)
 
     # 7th Layer (Fully connected 1)
+    with tf.name_scope("Fully_connected1"):
+      weights = CLDNNModel.weight_variable([lstm2_output_shape[1], self.fully_connected1_size])
+      biases = CLDNNModel.bias_variable([self.fully_connected1_size])
+
+      fully_connected_layer1 = tf.matmul(lstm2_output_reshaped, weights) + biases
 
     # 7th Layer (Fully connected 2)
+    with tf.name_scope("Fully_connected2"):
+      weights = CLDNNModel.weight_variable([self.fully_connected1_size, self.output_size])
+      biases = CLDNNModel.bias_variable([self.output_size])
+
+      fully_connected_layer2 = tf.matmul(fully_connected_layer1, weights) + biases
         
-    return 0 # Should be the 7th layer's ouput
+    return fully_connected_layer2 # Should be the 7th layer's ouput
 
   @define_scope
   def optimize(self):
@@ -132,4 +156,17 @@ class CLDNNModel:
     return CLDNNModel.init_variable(shape, init_method, xavier_params)
 
 # For testing purpose
-#cldnn = CLDNNModel(tf.placeholder(tf.float32, shape=[None, 32 * 84]), tf.placeholder(tf.float32, shape=[None, 10]), 32, 84)
+def main():
+  BATCH_SIZE = 64
+  MAX_INPUT_SEQUENCE_LENGTH = 100
+  MAX_OUTPUT_SEQUENCE_LENGTH = 10
+  FEATURES_COUNT = 40
+  TRAINING_ITERATION_COUNT = 1000
+
+  input_placeholder = tf.placeholder(tf.float32, [None, MAX_INPUT_SEQUENCE_LENGTH * FEATURES_COUNT], name="Input__placeholder")
+  lengths_placeholder = tf.placeholder(tf.int32, [None], name="Lengths_placeholder")
+  output_placeholder = tf.placeholder(tf.int32, [None, MAX_OUTPUT_SEQUENCE_LENGTH], name="True_output_placeholder")
+  cldnn = CLDNNModel(input_placeholder, output_placeholder, MAX_INPUT_SEQUENCE_LENGTH, FEATURES_COUNT)
+
+if __name__ == '__main__':
+  main()
