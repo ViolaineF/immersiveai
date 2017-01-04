@@ -61,8 +61,9 @@ class SimpleLSTM(object):
 
   @define_scope
   def loss(self):
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder)
-    return tf.reduce_mean(cross_entropy)
+    #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder)
+    #return tf.reduce_mean(cross_entropy)
+    return tf.reduce_mean(tf.not_equal(self.inference, self.output_placeholder))
 
   @define_scope
   def train(self):
@@ -83,15 +84,19 @@ class SimpleLSTM(object):
 
 def main():
   #hyperparams
+  #buckets = ((150, 22), (250, 40), (500, 60), (1000, 80), (1500, 100), (2000, 120))
   BATCH_SIZE = 64
-  MAX_INPUT_SEQUENCE_LENGTH = 100
-  MAX_OUTPUT_SEQUENCE_LENGTH = 10
+  MAX_INPUT_SEQUENCE_LENGTH = 150
+  MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
   TRAINING_ITERATION_COUNT = 1000
 
   #get batch
-  data = SpeechDataUtils(librispeech_path = 'D:\\tmp\\LibriSpeech')
+  data = SpeechDataUtils(librispeech_path = 'F:\\LibriSpeech')
   data.preload_batch(BATCH_SIZE)
+
+  #for i in tqdm(range(10)):
+  #  data.preload_batch(BATCH_SIZE)
 
   dictionnary_size = data.dictionnary_size
 
