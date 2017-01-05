@@ -18,28 +18,28 @@ def define_scope(function):
 
 class SimpleLSTMOptions(object):
   def __init__(self,
+               dictionary_size,
+               embedding_size = 64,
                learning_rate = 1e-4,
                lstm_hidden_units = 512,
                time_major = False):
 
+    self.dictionary_size = dictionary_size
+    self.embedding_size = embedding_size
     self.learning_rate = learning_rate
     self.lstm_hidden_units = lstm_hidden_units
     self.time_major = time_major
 
-  default_options = None
-SimpleLSTMOptions.default_options = SimpleLSTMOptions()
-
 class SimpleLSTM(object):
   def __init__(self,
                 input_placeholder, lengths_placeholder, output_placeholder,
-                options = SimpleLSTMOptions.default_options
+                options
                 ):
     self.input_placeholder = input_placeholder
     self.lengths_placeholder = lengths_placeholder
     self.output_placeholder = output_placeholder
 
     self.output_size = int(self.output_placeholder.get_shape()[1])
-    self.dictionnary_size = int(self.output_placeholder.get_shape()[2])
 
     self.options = options
 
@@ -53,20 +53,20 @@ class SimpleLSTM(object):
       output_shape = [-1, int(output_shape[1] * output_shape[2])]
       outputs = tf.reshape(outputs, output_shape)
 
-      weights = tf.Variable(tf.truncated_normal([output_shape[1], int(self.output_size * self.dictionnary_size)], stddev = 0.1))
-      biaises = tf.Variable(tf.constant(0.1, shape=[int(self.output_size * self.dictionnary_size)]))
+      weights = tf.Variable(tf.truncated_normal([output_shape[1], self.output_size * self.options.embedding_size], stddev = 0.1))
+      biaises = tf.Variable(tf.constant(0.1, shape=[self.output_size * self.options.embedding_size]))
 
       logits = tf.matmul(outputs, weights) + biaises
+      logits = tf.reshape(logits, (-1, self.output_size , self.options.embedding_size))
     
     return logits
 
   @define_scope
   def loss(self):
-    #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder)
-    #return tf.reduce_mean(cross_entropy)
-    #output_float = tf.cast(self.output_placeholder, tf.float32)
-    inference_reshape = tf.reshape(self.inference, [-1, self.output_size, self.dictionnary_size])
-    error = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(inference_reshape, self.output_placeholder))
+    embedding_map = tf.Variable(tf.truncated_normal([self.options.dictionary_size, 64], stddev = 0.1), name = "embedding_map")
+    seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.output_placeholder)
+
+    error = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.inference, seq_embeddings))
     
     return error
 
@@ -90,25 +90,25 @@ class SimpleLSTM(object):
 def main():
   #hyperparams
   #buckets = ((150, 22), (250, 40), (500, 60), (1000, 80), (1500, 100), (2000, 120))
-  BATCH_SIZE = 256
+  BATCH_SIZE = 1
   MAX_INPUT_SEQUENCE_LENGTH = 150
   MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
-  TRAINING_ITERATION_COUNT = 100000
+  TRAINING_ITERATION_COUNT = 10000
 
   #get batch
   data = SpeechDataUtils(librispeech_path = "F:\LibriSpeech")
 
-  dictionnary_size = data.dictionnary_size
+  dictionary_size = data.dictionary_size
 
   with tf.Graph().as_default():
     #Placeholders
     input_placeholder = tf.placeholder(tf.float32, [None, MAX_INPUT_SEQUENCE_LENGTH, FEATURES_COUNT], name="Input__placeholder")
     lengths_placeholder = tf.placeholder(tf.int32, [None], name="Lengths_placeholder")
-    output_placeholder = tf.placeholder(tf.float32, [None, MAX_OUTPUT_SEQUENCE_LENGTH, dictionnary_size], name="True_output_placeholder")
+    output_placeholder = tf.placeholder(tf.int32, [None, MAX_OUTPUT_SEQUENCE_LENGTH], name="True_output_placeholder")
 
     #Model
-    options = SimpleLSTMOptions(lstm_hidden_units = 1024)
+    options = SimpleLSTMOptions(dictionary_size, lstm_hidden_units = 256)
     model = SimpleLSTM(input_placeholder,lengths_placeholder, output_placeholder, options)
 
     train_op = model.train

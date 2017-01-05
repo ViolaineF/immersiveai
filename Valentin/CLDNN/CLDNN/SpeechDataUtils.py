@@ -16,8 +16,8 @@ class SpeechDataUtils(object):
     self.features_count = 40
     self.bucket_size = bucket_size
 
-    self.dictionnary = get_words_dictionnary(librispeech_path)
-    self.dictionnary_size = len(self.dictionnary)
+    self.dictionary = get_words_dictionary(librispeech_path)
+    self.dictionary_size = len(self.dictionary)
     self.batches_info = get_batches_info(librispeech_path)
 
     self.preloaded_batches = Queue()
@@ -72,7 +72,7 @@ class SpeechDataUtils(object):
   def init_batch_list(self):
     pass
 
-  def get_batch(self, batch_size):
+  def get_batch(self, batch_size, one_hot = False):
     batch_files_from_bucket = self.batches_info[self.bucket_size]
 
     batch_files_from_bucket_count = len(batch_files_from_bucket)
@@ -94,14 +94,18 @@ class SpeechDataUtils(object):
     lengths = mfcc_lenghts_batch[selected_range:selected_range + batch_size]
 
     output_tokens = tokenized_transcripts_batch[selected_range:selected_range + batch_size]
-    max_sequence_lenght = len(output_tokens[0])
 
-    outputs = np.zeros((batch_size, max_sequence_lenght, self.dictionnary_size))
+    if one_hot:
+      max_sequence_lenght = len(output_tokens[0])
+
+      outputs = np.zeros((batch_size, max_sequence_lenght, self.dictionary_size))
     
-    for entry in range(batch_size):
-      for token in range(max_sequence_lenght):
-        token_class = output_tokens[entry][token]
-        outputs[entry][token][token_class] = 1
+      for entry in range(batch_size):
+        for token in range(max_sequence_lenght):
+          token_class = output_tokens[entry][token]
+          outputs[entry][token][token_class] = 1
+    else:
+      outputs = output_tokens
 
     batch = (inputs, lengths, outputs)
     return batch
@@ -185,24 +189,24 @@ def get_batches_info(librispeech_path : str):
 
   #str(mfcc_padded_length) + ' ' + batch_file_path + ' ' + mfcc_batch_lengths_file_path + ' ' + transcripts_batch_file_path + ' ' + transcripts_batch_lengths_file_path + ' ' + tokenized_transcripts_batch_file_path
 
-def get_words_dictionnary(librispeech_path : str):
+def get_words_dictionary(librispeech_path : str):
   # Retrieve existing file
-  dictionnary_file_path = os.path.join(librispeech_path, "dictionnary.txt")
-  dictionnary = dict()
+  dictionary_file_path = os.path.join(librispeech_path, "dictionary.txt")
+  dictionary = dict()
 
-  dictionnary_file = open(dictionnary_file_path, 'r')
-  lines = dictionnary_file.readlines()
+  dictionary_file = open(dictionary_file_path, 'r')
+  lines = dictionary_file.readlines()
 
   for i in range(len(lines)):
     line = lines[i]
     id, word = line.split(' ')
     if word.endswith('\n'):
       word = word[:-1]
-    dictionnary[word] = int(id)
+    dictionary[word] = int(id)
 
-  dictionnary_file.close()
+  dictionary_file.close()
 
-  return dictionnary
+  return dictionary
 
 def get_transcript_from_file_and_index(transcript_file_path : str, sentence_index : int):
     transcript_file = open(transcript_file_path, 'r')
@@ -298,7 +302,7 @@ def tokenize_transcript(dictionary : dict, transcript : str, split_char = ' '):
 def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, buckets = ((150, 22), (250, 40), (500, 60), (1000, 80), (1500, 100), (2000, 120))):
   preprocess_order = get_preprocess_order(librispeech_path)
   mfcc_lengths = get_mfcc_lengths(librispeech_path)
-  word_dictionary = get_words_dictionnary(librispeech_path)
+  word_dictionary = get_words_dictionary(librispeech_path)
 
   sentence_count = len(mfcc_lengths)
   i = 0
