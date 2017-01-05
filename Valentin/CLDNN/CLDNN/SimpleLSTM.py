@@ -63,7 +63,12 @@ class SimpleLSTM(object):
   def loss(self):
     #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder)
     #return tf.reduce_mean(cross_entropy)
-    return tf.reduce_mean(tf.not_equal(self.inference, self.output_placeholder))
+    #output_float = tf.cast(self.output_placeholder, tf.float32)
+    mistakes = self.inference - tf.cast(self.output_placeholder, tf.float32)
+    mistakes = tf.abs(mistakes)
+    error = tf.reduce_mean(mistakes)
+    
+    return error
 
   @define_scope
   def train(self):
@@ -85,18 +90,14 @@ class SimpleLSTM(object):
 def main():
   #hyperparams
   #buckets = ((150, 22), (250, 40), (500, 60), (1000, 80), (1500, 100), (2000, 120))
-  BATCH_SIZE = 64
+  BATCH_SIZE = 256
   MAX_INPUT_SEQUENCE_LENGTH = 150
   MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
-  TRAINING_ITERATION_COUNT = 1000
+  TRAINING_ITERATION_COUNT = 100000
 
   #get batch
-  data = SpeechDataUtils(librispeech_path = 'F:\\LibriSpeech')
-  data.preload_batch(BATCH_SIZE)
-
-  #for i in tqdm(range(10)):
-  #  data.preload_batch(BATCH_SIZE)
+  data = SpeechDataUtils(librispeech_path = 'E:\\LibriSpeech')
 
   dictionnary_size = data.dictionnary_size
 
@@ -107,7 +108,7 @@ def main():
     output_placeholder = tf.placeholder(tf.int32, [None, MAX_OUTPUT_SEQUENCE_LENGTH], name="True_output_placeholder")
 
     #Model
-    options = SimpleLSTMOptions(lstm_hidden_units = 256)
+    options = SimpleLSTMOptions(lstm_hidden_units = 1024)
     model = SimpleLSTM(input_placeholder,lengths_placeholder, output_placeholder, options)
 
     train_op = model.train
@@ -130,8 +131,7 @@ def main():
       print("Variables initialized !")
 
       for i in tqdm(range(TRAINING_ITERATION_COUNT)):
-        batch_inputs, batch_lengths, batch_outputs = data.get_preloaded_batch(BATCH_SIZE)
-        data.preload_batch(BATCH_SIZE)
+        batch_inputs, batch_lengths, batch_outputs = data.get_batch(BATCH_SIZE)        
 
         feed_dict = {
           input_placeholder : batch_inputs,

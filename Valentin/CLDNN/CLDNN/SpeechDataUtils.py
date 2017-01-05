@@ -65,6 +65,34 @@ class SpeechDataUtils(object):
   def has_preloaded_batch(self):
     return not self.preloaded_batches.empty()
 
+  def preloaded_batches_count(self):
+    return self.preloaded_batches.qsize()
+
+  def get_batch(self, batch_size):
+    batch_files_from_bucket = self.batches_info[self.bucket_size]
+
+    batch_files_from_bucket_count = len(batch_files_from_bucket)
+
+    selected_file = random.randint(0, batch_files_from_bucket_count - 1)
+    selected_file = batch_files_from_bucket[selected_file]
+    mfcc_batch_file_path, mfcc_batch_lengths_file_path, \
+      _, _, \
+      tokenized_transcripts_batch_file_path = selected_file
+
+    mfcc_batch = np.load(mfcc_batch_file_path)
+    mfcc_lenghts_batch = np.load(mfcc_batch_lengths_file_path)
+    tokenized_transcripts_batch = np.load(tokenized_transcripts_batch_file_path)
+
+    complete_batch_size = len(mfcc_batch)
+    selected_range = random.randint(0, complete_batch_size - batch_size - 1)
+
+    inputs = mfcc_batch[selected_range:selected_range + batch_size]
+    lengths = mfcc_lenghts_batch[selected_range:selected_range + batch_size]
+    outputs = tokenized_transcripts_batch[selected_range:selected_range + batch_size]
+
+    batch = (inputs, lengths, outputs)
+    return batch
+
 def get_preprocess_order(librispeech_path : str):
   preprocess_order_file = open(os.path.join(librispeech_path, "process_order.txt"), 'r')
 
