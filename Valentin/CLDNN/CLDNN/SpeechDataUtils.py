@@ -21,6 +21,7 @@ class SpeechDataUtils(object):
     self.batches_info = get_batches_info(librispeech_path)
 
     self.preloaded_batches = Queue()
+    self.init_batch_list()
 
   def preload_batch(self, batch_size : int):
     thread = Thread(target=self._preload_batch_coroutine, args=[batch_size])
@@ -68,6 +69,9 @@ class SpeechDataUtils(object):
   def preloaded_batches_count(self):
     return self.preloaded_batches.qsize()
 
+  def init_batch_list(self):
+    pass
+
   def get_batch(self, batch_size):
     batch_files_from_bucket = self.batches_info[self.bucket_size]
 
@@ -88,7 +92,16 @@ class SpeechDataUtils(object):
 
     inputs = mfcc_batch[selected_range:selected_range + batch_size]
     lengths = mfcc_lenghts_batch[selected_range:selected_range + batch_size]
-    outputs = tokenized_transcripts_batch[selected_range:selected_range + batch_size]
+
+    output_tokens = tokenized_transcripts_batch[selected_range:selected_range + batch_size]
+    max_sequence_lenght = len(output_tokens[0])
+
+    outputs = np.zeros((batch_size, max_sequence_lenght, self.dictionnary_size))
+    
+    for entry in range(batch_size):
+      for token in range(max_sequence_lenght):
+        token_class = output_tokens[entry][token]
+        outputs[entry][token][token_class] = 1
 
     batch = (inputs, lengths, outputs)
     return batch

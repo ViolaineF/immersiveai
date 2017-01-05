@@ -39,21 +39,22 @@ class SimpleLSTM(object):
     self.output_placeholder = output_placeholder
 
     self.output_size = int(self.output_placeholder.get_shape()[1])
+    self.dictionnary_size = int(self.output_placeholder.get_shape()[2])
 
     self.options = options
 
   @define_scope
   def inference(self):
     with tf.name_scope("LSTM"):
-      cell = tf.nn.rnn_cell.LSTMCell(self.options.lstm_hidden_units)
+      cell = tf.nn.rnn_cell.LSTMCell(self.options.lstm_hidden_units, state_is_tuple = True)
       outputs, state = tf.nn.dynamic_rnn(cell, self.input_placeholder, self.lengths_placeholder, dtype = tf.float32, time_major = self.options.time_major)
 
       output_shape = outputs.get_shape()
       output_shape = [-1, int(output_shape[1] * output_shape[2])]
       outputs = tf.reshape(outputs, output_shape)
 
-      weights = tf.Variable(tf.truncated_normal([output_shape[1], self.output_size], stddev = 0.1))
-      biaises = tf.Variable(tf.constant(0.1, shape=[self.output_size]))
+      weights = tf.Variable(tf.truncated_normal([output_shape[1], int(self.output_size * self.dictionnary_size)], stddev = 0.1))
+      biaises = tf.Variable(tf.constant(0.1, shape=[int(self.output_size * self.dictionnary_size)]))
 
       logits = tf.matmul(outputs, weights) + biaises
     
@@ -64,9 +65,8 @@ class SimpleLSTM(object):
     #cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder)
     #return tf.reduce_mean(cross_entropy)
     #output_float = tf.cast(self.output_placeholder, tf.float32)
-    mistakes = self.inference - tf.cast(self.output_placeholder, tf.float32)
-    mistakes = tf.abs(mistakes)
-    error = tf.reduce_mean(mistakes)
+    inference_reshape = tf.reshape(self.inference, [-1, self.output_size, self.dictionnary_size])
+    error = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(inference_reshape, self.output_placeholder))
     
     return error
 
@@ -97,7 +97,7 @@ def main():
   TRAINING_ITERATION_COUNT = 100000
 
   #get batch
-  data = SpeechDataUtils(librispeech_path = 'E:\\LibriSpeech')
+  data = SpeechDataUtils(librispeech_path = "F:\LibriSpeech")
 
   dictionnary_size = data.dictionnary_size
 
@@ -105,7 +105,7 @@ def main():
     #Placeholders
     input_placeholder = tf.placeholder(tf.float32, [None, MAX_INPUT_SEQUENCE_LENGTH, FEATURES_COUNT], name="Input__placeholder")
     lengths_placeholder = tf.placeholder(tf.int32, [None], name="Lengths_placeholder")
-    output_placeholder = tf.placeholder(tf.int32, [None, MAX_OUTPUT_SEQUENCE_LENGTH], name="True_output_placeholder")
+    output_placeholder = tf.placeholder(tf.float32, [None, MAX_OUTPUT_SEQUENCE_LENGTH, dictionnary_size], name="True_output_placeholder")
 
     #Model
     options = SimpleLSTMOptions(lstm_hidden_units = 1024)
