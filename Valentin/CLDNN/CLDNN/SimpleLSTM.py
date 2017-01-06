@@ -58,7 +58,7 @@ class SimpleLSTM(object):
 
       logits = tf.matmul(outputs, weights) + biaises
       logits = tf.reshape(logits, (-1, self.output_size , self.options.embedding_size))
-    
+
     return logits
 
   @define_scope
