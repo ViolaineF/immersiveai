@@ -75,8 +75,8 @@ class mnist_model:
       weights = mnist_model.weight_variable([fc_size, self.fully_connected_units_count])
       biaises = mnist_model.bias_variable([self.fully_connected_units_count])
       hidden_fc_layer1 = tf.nn.relu(tf.matmul(hidden_max_pool_layer2_flatten, weights) + biaises)
-
-    ## Dropout
+  
+      ## Dropout
     hidden_fc_layer1_drop = tf.nn.dropout(hidden_fc_layer1, self.dropout_placeholder)
 
     # 4th Layer (Fully connected)

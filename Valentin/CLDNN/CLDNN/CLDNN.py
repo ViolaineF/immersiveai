@@ -18,12 +18,14 @@ def define_scope(function):
 class CLDNNModel:
   def __init__(self,
                 input_placeholder, output_placeholder,
-                input_width, input_height,
+                input_width : int, input_height : int,
+                dictionary_size : int,
                 learning_rate = 1e-4,
                 conv_kernel_size = 5, conv_features_count = 32,
                 dimension_reduction_output_size = 256,
                 lstm1_hidden_units_count = 512, lstm2_hidden_units_count = 512,
-                fully_connected1_size = 256
+                fully_connected1_size = 256,
+                lookup_table_size = 64
                 ):
     self.input_placeholder = input_placeholder
     self.output_placeholder = output_placeholder
@@ -44,14 +46,18 @@ class CLDNNModel:
     self.lstm1_hidden_units_count = lstm1_hidden_units_count
     self.lstm2_hidden_units_count = lstm2_hidden_units_count
 
+    self.dictionary_size = dictionary_size
     self.fully_connected1_size = fully_connected1_size
 
-    self.prediction
-    self.optimize
-    self.accuracy
+    self.lookup_table_size = lookup_table_size
+
+    print("Inference : ", self.inference)
+    print("Loss : ", self.loss)
+    print("Training : ", self.training)
+    print("Evaluation : ", self.evaluation)
 
   @define_scope
-  def prediction(self):
+  def inference(self):
     input_as_2d_tensor = tf.reshape(self.input_placeholder, [-1, self.input_width, self.input_height, 1])
 
     # 1st Layer (Convolution)
@@ -72,28 +78,31 @@ class CLDNNModel:
     with tf.name_scope("Dim_reduction"):
       convoluted_size = int(self.input_width / 2) * int(self.input_height)
       flatten_size = convoluted_size * self.conv_features_count
+      #flatten_size = int(convoluted_size * self.conv_features_count / self.input_width)
       max_pool_layer_flatten = tf.reshape(max_pool_layer, [-1, flatten_size])
       ## Weights and Bias
-      weights_dim_red_layer = CLDNNModel.weight_variable([flatten_size, self.dimension_reduction_output_size])
-      bias_dim_red_layer = CLDNNModel.bias_variable([self.dimension_reduction_output_size])
+      weights_dim_red_layer = CLDNNModel.weight_variable([flatten_size, self.input_width * self.dimension_reduction_output_size])
+      bias_dim_red_layer = CLDNNModel.bias_variable([self.input_width * self.dimension_reduction_output_size])
       ## Result
       dim_red_layer = tf.matmul(max_pool_layer_flatten, weights_dim_red_layer) + bias_dim_red_layer
+      
 
     # 4th Layer (Concatenation)
     with tf.name_scope("Concatenation"):
       concatenation_layer = tf.concat(1, [dim_red_layer, self.input_placeholder])
-      print(concatenation_layer)
-      exit()
+      concatenation_layer_reshaped = tf.reshape(concatenation_layer, (-1, self.input_width, self.dimension_reduction_output_size + self.input_height))
 
     # 5th Layer (LSTM 1)
     with tf.name_scope("LSTM1"):
-      lstm_cell = tf.nn.rnn_cell.LSTMCell(self.lstm1_hidden_units_count)
-      lstm1_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, concatenation_layer, dtype=tf.float32)
+      with tf.variable_scope("LSTMCell1"):
+        lstm_cell = tf.nn.rnn_cell.LSTMCell(self.lstm1_hidden_units_count)
+        lstm1_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, concatenation_layer_reshaped, dtype=tf.float32)
 
     # 6th Layer (LSTM 2)
     with tf.name_scope("LSTM2"):
-      lstm_cell = tf.nn.rnn_cell.LSTMCell(self.lstm2_hidden_units_count)
-      lstm2_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, lstm1_output, dtype=tf.float32)
+      with tf.variable_scope("LSTMCell2"):
+        lstm_cell = tf.nn.rnn_cell.LSTMCell(self.lstm2_hidden_units_count)
+        lstm2_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, lstm1_output, dtype=tf.float32)
 
     lstm2_output_shape = lstm2_output.get_shape()
     lstm2_output_shape = [-1, int(lstm2_output_shape[1] * lstm2_output_shape[2])]
@@ -116,14 +125,23 @@ class CLDNNModel:
     return fully_connected_layer2 # Should be the 7th layer's ouput
 
   @define_scope
-  def optimize(self):
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.prediction, self.output_placeholder))
+  def loss(self):
+    #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.prediction, self.output_placeholder))
+    embedding_map = tf.Variable(tf.truncated_normal([self.dictionary_size, self.lookup_table_size], stddev = 0.1), name = "embedding_map")
+    seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.output_placeholder)
+
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.inference, seq_embeddings))
+
+    return cross_entropy
+
+  @define_scope
+  def training(self):
     optimizer = tf.train.GradientDescentOptimizer(self.learning_rate)
-    return optimizer.minimize(cross_entropy)
+    return optimizer.minimize(self.loss)
     
   @define_scope
-  def accuracy(self):
-    correct_prediction = tf.equal(tf.argmax(self.prediction, 1), tf.argmax(self.output_placeholder, 1))
+  def evaluation(self):
+    correct_prediction = tf.equal(tf.argmax(self.inference, 1), tf.argmax(self.output_placeholder, 1))
     return tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
     
   @staticmethod
@@ -158,15 +176,25 @@ class CLDNNModel:
 # For testing purpose
 def main():
   BATCH_SIZE = 64
-  MAX_INPUT_SEQUENCE_LENGTH = 100
-  MAX_OUTPUT_SEQUENCE_LENGTH = 10
+  MAX_INPUT_SEQUENCE_LENGTH = 150
+  MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
   TRAINING_ITERATION_COUNT = 1000
 
   input_placeholder = tf.placeholder(tf.float32, [None, MAX_INPUT_SEQUENCE_LENGTH * FEATURES_COUNT], name="Input__placeholder")
   lengths_placeholder = tf.placeholder(tf.int32, [None], name="Lengths_placeholder")
   output_placeholder = tf.placeholder(tf.int32, [None, MAX_OUTPUT_SEQUENCE_LENGTH], name="True_output_placeholder")
-  cldnn = CLDNNModel(input_placeholder, output_placeholder, MAX_INPUT_SEQUENCE_LENGTH, FEATURES_COUNT)
+  cldnn = CLDNNModel(input_placeholder, output_placeholder, MAX_INPUT_SEQUENCE_LENGTH, FEATURES_COUNT, 700000)
+
+  init = tf.global_variables_initializer()
+
+  session_config = tf.ConfigProto()
+  session_config.gpu_options.allow_growth = True
+
+  with tf.Session(config = session_config) as session:
+    print("Initializing variables...")
+    session.run(init)
+    print("Variables initialized !")
 
 if __name__ == '__main__':
   main()
