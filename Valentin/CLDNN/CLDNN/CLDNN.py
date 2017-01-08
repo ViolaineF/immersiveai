@@ -2,6 +2,7 @@ import tensorflow as tf
 from tqdm import tqdm
 import functools
 from SpeechDataUtils import SpeechDataUtils
+from SpeechDataUtils import SpeechDataSet
 
 def define_scope(function):
   attribute = '_cache_' + function.__name__
@@ -204,9 +205,12 @@ def main():
   BATCH_SIZE = 1
   MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
-  TRAINING_ITERATION_COUNT = 1000
+  TRAINING_ITERATION_COUNT = 100000
 
-  data = SpeechDataUtils(librispeech_path = r"C:\tmp\LibriSpeech")
+  data = SpeechDataUtils(librispeech_path = r"D:\tmp\LibriSpeech")
+  train_data = data.train
+  eval_data = data.eval
+  eval_iterations_count = eval_data.batch_total_count
   dictionary_size = data.dictionary_size
   max_timesteps = data.bucket_size
 
@@ -228,6 +232,7 @@ def main():
 
     train_op = cldnn.training
     loss_op = cldnn.loss
+    eval_op = cldnn.evaluation
 
     summary = tf.summary.merge_all()
     init = tf.global_variables_initializer()
@@ -243,9 +248,10 @@ def main():
       session.run(init)
       print("Variables initialized !")
 
+      # TRAINING
       for i in tqdm(range(TRAINING_ITERATION_COUNT)):
         #batch_inputs, batch_lengths, batch_outputs = data.get_batch(BATCH_SIZE)        
-        batch_inputs, batch_lengths, batch_outputs = data.get_batch(BATCH_SIZE, one_hot = True)
+        batch_inputs, batch_lengths, batch_outputs = train_data.next_batch(BATCH_SIZE, one_hot = True)
 
         feed_dict = {
           input_placeholder : batch_inputs,
@@ -264,6 +270,18 @@ def main():
           checkpoint_file = '/tmp/custom/CLDNN/logs/model.ckpt'
           print("\nAt step", i, "loss = ", loss_value,'\n')
           saver.save(session, checkpoint_file, global_step = i)
+
+      # EVALUTATION
+      print("Testing model on", eval_iterations_count, "samples")
+      for i in tqdm(range(eval_iterations_count)):
+        total_eval = 0
+        batch_inputs, batch_lengths, batch_outputs = eval_data.next_batch(1, one_hot = True)
+
+        total_eval += session.run([eval_op], feed_dict = feed_dict)
+      total_eval /= eval_iterations_count
+      print("\nAccuracy = " +str(total_eval * 100) + "%\n")
+      input("\nPress to exit ...")
+
 
 if __name__ == '__main__':
   main()

@@ -1,114 +1,121 @@
 import os
 import numpy as np
-from threading import Thread
-from asyncio import Queue
-from asyncio import StreamReader
 from tqdm import tqdm
-import random
 
 import time
 
+class SpeechDataSet(object):
+  def __init__(self, batches_infos : list, batch_file_size : int, allow_autorewind : bool):
+    self.batches_infos = batches_infos
+
+    self.batch_file_size = batch_file_size
+    self.batch_files_count = len(self.batch_files_infos)
+    self.batch_total_count = batch_file_size * self.batch_files_count
+
+    self.current_batch_index = 0
+    self.current_input_index = 0
+
+    self.current_mfcc_batch = None
+    self.current_lengths_batch = None
+    self.current_tokenized_transcripts_batch = None
+
+    self.allow_autorewind = allow_autorewind
+
+  def load_batch(self):
+    selected_file = self.batches_info[self.current_batch_index]
+    mfcc_batch_file_path, mfcc_batch_lengths_file_path, \
+      _, _, \
+      tokenized_transcripts_batch_file_path = selected_file
+
+    if self.current_mfcc_batch is not None :
+      self.current_batch_index += 1
+
+    if self.current_batch_index >= self.batch_files_count :
+      if self.allow_autorewind:
+        self.current_batch_index = 0
+      else:
+        return False
+
+    self.current_mfcc_batch = np.load(mfcc_batch_file_path)
+    self.current_lengths_batch = np.load(mfcc_batch_lengths_file_path)
+    self.current_tokenized_transcripts_batch = np.load(tokenized_transcripts_batch_file_path)
+
+    return True
+
+  def next_batch(self, batch_size : int, one_hot = True):
+    index_in_batch = self.current_input_index
+
+    inputs = self.current_mfcc_batch[index_in_batch : index_in_batch + batch_size]
+    lengths = self.current_lengths_batch[index_in_batch : index_in_batch + batch_size]
+    outputs = self.current_tokenized_transcripts_batch[index_in_batch : index_in_batch + batch_size]
+
+    self.current_input_index += batch_size
+
+    # Selection d'un nouveau paquet de données quand on arrive au bout de l'actuel
+    if self.current_input_index > self.batch_file_size:
+      self.current_input_index -= self.batch_file_size
+      successfully_loaded = self.load_batch()
+      if successfully_loaded:
+        inputs += self.current_mfcc_batch[:self.current_input_index]
+        lengths += self.current_lengths_batch[:self.current_input_index]
+        outputs += self.current_tokenized_transcripts_batch[:self.current_input_index]
+
+    # Si l'option OneHot est activée, transforme les tokens en vecteurs one-hot dans les outputs (les phrases)
+    if one_hot:
+      outputs = SpeechDataSet.token_to_onehot(outputs, batch_size, self.dictionary_size)
+
+    batch = (inputs, lengths, outputs)
+    return batch
+
+  @staticmethod
+  def token_to_onehot(tokens, batch_size : int, dictionary_size : int):
+    max_sequence_length = len(tokens[0])
+
+    outputs = np.zeros((batch_size, max_sequence_length, dictionary_size))
+    
+    for entry in range(batch_size):
+      for token in range(max_sequence_length):
+        token_class = output_tokens[entry][token]
+        outputs[entry][token][token_class] = 1
+
 class SpeechDataUtils(object):
-  def __init__(self, librispeech_path = r"D:\tmp\LibriSpeech", bucket_size = 150):
+  def __init__(self, librispeech_path = r"D:\tmp\LibriSpeech", bucket_size = 150, eval_batch_files_count = 2, allow_autorewind = True):
+    # Chemin vers le dossier Librispeech
     self.librispeech_path = librispeech_path
+    # Données contenant l'ordre utilisé lors du preprocessus
     self.preprocess_order = get_preprocess_order(librispeech_path)
 
+    # Nombre de features calculées pour le MFCC
     self.features_count = 40
+    # Taille maximale en nombre de frames des MFCC
     self.bucket_size = bucket_size
 
+    # Dictionnaire des mots trouvés lors du preprocess
     self.dictionary = get_words_dictionary(librispeech_path)
+    # Taille du dictionnaire
     self.dictionary_size = len(self.dictionary)
-    self.batches_info = get_batches_info(librispeech_path)
+    # Informations sur les paquets de données ayant été préprocess
+    # Contient une liste de N listes d'informations, les informations sont des chemins vers les paquets (N : Nombre de paquets)
+    # La liste d'information d'un fichier est de la forme :
+    # [Paquet de MFCC, Paquet des longueurs des MFCC, Paquet de transcripts, Paquet de longueurs des transcripts, Paquet de transcripts sous forme de tokens (int)]
+    self.batches_info = get_batches_info(librispeech_path)[self.bucket_size]
 
-    self.preloaded_batches = Queue()
-    self.init_batch_list()
+    # Nombre d'entrées/sorties dans un paquet
+    self.batch_file_size = 5000
 
-  def preload_batch(self, batch_size : int):
-    thread = Thread(target=self._preload_batch_coroutine, args=[batch_size])
-    thread.start()
-    return thread
+    train_batch_files_count = len(self.batches_info) - eval_batch_files_count
+    self.sets = dict()
+    self.sets["eval"] = SpeechDataSet(self.batches_info[-eval_batch_files_count:], self.batch_file_size, allow_autorewind)
+    self.sets["train"] = SpeechDataSet(self.batches_info[:train_batch_files_count], self.batch_file_size, allow_autorewind)
 
-  def _preload_batch_coroutine(self, batch_size : int):
-    # (Input, Lengths, Output)
+  @property
+  def train(self) -> SpeechDataSet:
+    return self.sets["train"]
 
-    batch_files_from_bucket = self.batches_info[self.bucket_size]
+  @property
+  def eval(self) -> SpeechDataSet:
+    return self.sets["eval"]
 
-    batch_files_from_bucket_count = len(batch_files_from_bucket)
-
-    selected_file = random.randint(0, batch_files_from_bucket_count - 1)
-    selected_file = batch_files_from_bucket[selected_file]
-    mfcc_batch_file_path, mfcc_batch_lengths_file_path, \
-      _, _, \
-      tokenized_transcripts_batch_file_path = selected_file
-
-    mfcc_batch = np.load(mfcc_batch_file_path)
-    mfcc_lenghts_batch = np.load(mfcc_batch_lengths_file_path)
-    tokenized_transcripts_batch = np.load(tokenized_transcripts_batch_file_path)
-
-    complete_batch_size = len(mfcc_batch)
-    selected_range = random.randint(0, complete_batch_size - batch_size - 1)
-
-    inputs = mfcc_batch[selected_range:selected_range + batch_size]
-    lengths = mfcc_lenghts_batch[selected_range:selected_range + batch_size]
-    outputs = tokenized_transcripts_batch[selected_range:selected_range + batch_size]
-
-    batch = (inputs, lengths, outputs)
-    self.preloaded_batches.put_nowait(batch)
-
-  def get_preloaded_batch(self, batch_size_if_empty):
-    if self.preloaded_batches.empty():
-      thread = self.preload_batch(batch_size_if_empty)
-      thread.join()
-
-    batch = self.preloaded_batches.get_nowait()
-    return batch
-
-  def has_preloaded_batch(self):
-    return not self.preloaded_batches.empty()
-
-  def preloaded_batches_count(self):
-    return self.preloaded_batches.qsize()
-
-  def init_batch_list(self):
-    pass
-
-  def get_batch(self, batch_size, one_hot = False):
-    batch_files_from_bucket = self.batches_info[self.bucket_size]
-
-    batch_files_from_bucket_count = len(batch_files_from_bucket)
-
-    selected_file = random.randint(0, batch_files_from_bucket_count - 1)
-    selected_file = batch_files_from_bucket[selected_file]
-    mfcc_batch_file_path, mfcc_batch_lengths_file_path, \
-      _, _, \
-      tokenized_transcripts_batch_file_path = selected_file
-
-    mfcc_batch = np.load(mfcc_batch_file_path)
-    mfcc_lenghts_batch = np.load(mfcc_batch_lengths_file_path)
-    tokenized_transcripts_batch = np.load(tokenized_transcripts_batch_file_path)
-
-    complete_batch_size = len(mfcc_batch)
-    selected_range = random.randint(0, complete_batch_size - batch_size - 1)
-
-    inputs = mfcc_batch[selected_range:selected_range + batch_size]
-    lengths = mfcc_lenghts_batch[selected_range:selected_range + batch_size]
-
-    output_tokens = tokenized_transcripts_batch[selected_range:selected_range + batch_size]
-
-    if one_hot:
-      max_sequence_lenght = len(output_tokens[0])
-
-      outputs = np.zeros((batch_size, max_sequence_lenght, self.dictionary_size))
-    
-      for entry in range(batch_size):
-        for token in range(max_sequence_lenght):
-          token_class = output_tokens[entry][token]
-          outputs[entry][token][token_class] = 1
-    else:
-      outputs = output_tokens
-
-    batch = (inputs, lengths, outputs)
-    return batch
 
 def get_preprocess_order(librispeech_path : str):
   preprocess_order_file = open(os.path.join(librispeech_path, "process_order.txt"), 'r')
