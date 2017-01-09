@@ -205,9 +205,9 @@ def main():
   BATCH_SIZE = 1
   MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
-  TRAINING_ITERATION_COUNT = 100000
+  TRAINING_ITERATION_COUNT = 125000
 
-  data = SpeechDataUtils(librispeech_path = r"D:\tmp\LibriSpeech")
+  data = SpeechDataUtils(librispeech_path = r"C:\LibriSpeech")
   train_data = data.train
   eval_data = data.eval
   eval_iterations_count = eval_data.batch_total_count
@@ -250,7 +250,7 @@ def main():
 
       # TRAINING
       for i in tqdm(range(TRAINING_ITERATION_COUNT)):
-        #batch_inputs, batch_lengths, batch_outputs = data.get_batch(BATCH_SIZE)        
+        #batch_inputs, batch_lengths, batch_outputs = data.get_batch(BATCH_SIZE)
         batch_inputs, batch_lengths, batch_outputs = train_data.next_batch(BATCH_SIZE, one_hot = True)
 
         feed_dict = {
@@ -272,12 +272,11 @@ def main():
           saver.save(session, checkpoint_file, global_step = i)
 
       # EVALUTATION
+      total_eval = 0
       print("Testing model on", eval_iterations_count, "samples")
       for i in tqdm(range(eval_iterations_count)):
-        total_eval = 0
         batch_inputs, batch_lengths, batch_outputs = eval_data.next_batch(1, one_hot = True)
-
-        total_eval += session.run([eval_op], feed_dict = feed_dict)
+        total_eval += session.run(eval_op, feed_dict = feed_dict)
       total_eval /= eval_iterations_count
       print("\nAccuracy = " +str(total_eval * 100) + "%\n")
       input("\nPress to exit ...")

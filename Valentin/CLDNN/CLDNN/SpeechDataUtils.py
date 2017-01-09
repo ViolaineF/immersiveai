@@ -5,11 +5,12 @@ from tqdm import tqdm
 import time
 
 class SpeechDataSet(object):
-  def __init__(self, batches_infos : list, batch_file_size : int, allow_autorewind : bool):
+  def __init__(self, batches_infos : list, batch_file_size : int, dictionary_size : int, allow_autorewind : bool):
     self.batches_infos = batches_infos
+    self.dictionary_size = dictionary_size
 
     self.batch_file_size = batch_file_size
-    self.batch_files_count = len(self.batch_files_infos)
+    self.batch_files_count = len(self.batches_infos)
     self.batch_total_count = batch_file_size * self.batch_files_count
 
     self.current_batch_index = 0
@@ -20,9 +21,10 @@ class SpeechDataSet(object):
     self.current_tokenized_transcripts_batch = None
 
     self.allow_autorewind = allow_autorewind
+    self.load_batch()
 
   def load_batch(self):
-    selected_file = self.batches_info[self.current_batch_index]
+    selected_file = self.batches_infos[self.current_batch_index]
     mfcc_batch_file_path, mfcc_batch_lengths_file_path, \
       _, _, \
       tokenized_transcripts_batch_file_path = selected_file
@@ -59,6 +61,9 @@ class SpeechDataSet(object):
         inputs += self.current_mfcc_batch[:self.current_input_index]
         lengths += self.current_lengths_batch[:self.current_input_index]
         outputs += self.current_tokenized_transcripts_batch[:self.current_input_index]
+    elif self.current_input_index == self.batch_file_size:
+      self.current_input_index -= self.batch_file_size
+      self.load_batch()
 
     # Si l'option OneHot est activée, transforme les tokens en vecteurs one-hot dans les outputs (les phrases)
     if one_hot:
@@ -75,8 +80,9 @@ class SpeechDataSet(object):
     
     for entry in range(batch_size):
       for token in range(max_sequence_length):
-        token_class = output_tokens[entry][token]
+        token_class = tokens[entry][token]
         outputs[entry][token][token_class] = 1
+    return outputs
 
 class SpeechDataUtils(object):
   def __init__(self, librispeech_path = r"D:\tmp\LibriSpeech", bucket_size = 150, eval_batch_files_count = 2, allow_autorewind = True):
@@ -105,8 +111,8 @@ class SpeechDataUtils(object):
 
     train_batch_files_count = len(self.batches_info) - eval_batch_files_count
     self.sets = dict()
-    self.sets["eval"] = SpeechDataSet(self.batches_info[-eval_batch_files_count:], self.batch_file_size, allow_autorewind)
-    self.sets["train"] = SpeechDataSet(self.batches_info[:train_batch_files_count], self.batch_file_size, allow_autorewind)
+    self.sets["eval"] = SpeechDataSet(self.batches_info[-eval_batch_files_count:], self.batch_file_size, self.dictionary_size, allow_autorewind)
+    self.sets["train"] = SpeechDataSet(self.batches_info[:train_batch_files_count], self.batch_file_size, self.dictionary_size, allow_autorewind)
 
   @property
   def train(self) -> SpeechDataSet:
