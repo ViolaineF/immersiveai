@@ -47,9 +47,10 @@ class CLDNNModelOptions:
 
 class CLDNNModel:
   def __init__(self,
-                input_placeholder, output_placeholder, options
+                input_placeholder, lengths_placeholder, output_placeholder, options
                 ):
     self.input_placeholder = input_placeholder
+    self.lengths_placeholder = lengths_placeholder
     self.output_placeholder = output_placeholder
         
     self.input_size = int(input_placeholder.get_shape()[1])
@@ -104,6 +105,7 @@ class CLDNNModel:
       biaises = CLDNNModel.bias_variable([flatten_input_size_red])
 
       red_input = tf.matmul(flatten_input, weights) + biaises
+      red_time = tf.cast(tf.round(self.lengths_placeholder / self.options.time_reduction_factor), tf.int32)
 
     # 4th Layer (Concatenation)
     with tf.name_scope("Concatenation"):
@@ -114,7 +116,7 @@ class CLDNNModel:
     with tf.name_scope("LSTM1"):
       with tf.variable_scope("LSTMCell1"):
         lstm_cell = tf.nn.rnn_cell.LSTMCell(self.options.lstm1_hidden_units_count)
-        lstm1_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, concatenation_layer_reshaped, dtype=tf.float32)
+        lstm1_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, concatenation_layer_reshaped, dtype=tf.float32, sequence_length = red_time)
 
     # 6th Layer (LSTM 2)
     with tf.name_scope("LSTM2"):
@@ -255,7 +257,7 @@ def main():
 
         feed_dict = {
           input_placeholder : batch_inputs,
-          #lengths_placeholder : batch_lengths,
+          lengths_placeholder : batch_lengths,
           output_placeholder : batch_outputs
           }
 
