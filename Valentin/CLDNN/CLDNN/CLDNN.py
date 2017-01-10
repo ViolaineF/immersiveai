@@ -105,7 +105,7 @@ class CLDNNModel:
       biaises = CLDNNModel.bias_variable([flatten_input_size_red])
 
       red_input = tf.matmul(flatten_input, weights) + biaises
-      red_time = tf.cast(tf.round(self.lengths_placeholder / self.options.time_reduction_factor), tf.int32)
+      red_time = tf.cast(tf.ceil(self.lengths_placeholder / self.options.time_reduction_factor), tf.int32)
 
     # 4th Layer (Concatenation)
     with tf.name_scope("Concatenation"):
@@ -207,7 +207,7 @@ def main():
   BATCH_SIZE = 1
   MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
-  TRAINING_ITERATION_COUNT = 125000
+  TRAINING_ITERATION_COUNT = 250000
 
   data = SpeechDataUtils(librispeech_path = r"C:\LibriSpeech")
   train_data = data.train
@@ -218,7 +218,7 @@ def main():
 
   with tf.Graph().as_default():
     input_placeholder = tf.placeholder(tf.float32, [None, max_timesteps, FEATURES_COUNT], name="Input__placeholder")
-    #lengths_placeholder = tf.placeholder(tf.int32, [None], name="Lengths_placeholder")
+    lengths_placeholder = tf.placeholder(tf.int32, [None], name="Lengths_placeholder")
     output_placeholder = tf.placeholder(tf.int32, [None, MAX_OUTPUT_SEQUENCE_LENGTH, dictionary_size], name="True_output_placeholder")
 
     options = CLDNNModelOptions(max_timesteps, FEATURES_COUNT, dictionary_size)
@@ -230,7 +230,7 @@ def main():
     options.max_pooling_size = 4
     options.time_reduction_factor = 10
 
-    cldnn = CLDNNModel(input_placeholder, output_placeholder, options)
+    cldnn = CLDNNModel(input_placeholder, lengths_placeholder, output_placeholder, options)
 
     train_op = cldnn.training
     loss_op = cldnn.loss

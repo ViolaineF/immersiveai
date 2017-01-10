@@ -42,6 +42,13 @@ class SpeechDataSet(object):
     self.current_lengths_batch = np.load(mfcc_batch_lengths_file_path)
     self.current_tokenized_transcripts_batch = np.load(tokenized_transcripts_batch_file_path)
 
+    index_shuffle = np.arange(len(self.current_mfcc_batch))
+    np.random.shuffle(index_shuffle)
+
+    self.current_mfcc_batch = self.current_mfcc_batch[index_shuffle]
+    self.current_lengths_batch = self.current_lengths_batch[index_shuffle]
+    self.current_tokenized_transcripts_batch = self.current_tokenized_transcripts_batch[index_shuffle]
+
     return True
 
   def next_batch(self, batch_size : int, one_hot = True):
@@ -104,7 +111,14 @@ class SpeechDataUtils(object):
     # Contient une liste de N listes d'informations, les informations sont des chemins vers les paquets (N : Nombre de paquets)
     # La liste d'information d'un fichier est de la forme :
     # [Paquet de MFCC, Paquet des longueurs des MFCC, Paquet de transcripts, Paquet de longueurs des transcripts, Paquet de transcripts sous forme de tokens (int)]
-    self.batches_info = get_batches_info(librispeech_path)[self.bucket_size]
+    batches_info = get_batches_info(librispeech_path)[self.bucket_size]
+
+    index_shuffle = np.arange(len(batches_info))
+    np.random.shuffle(index_shuffle)
+
+    self.batches_info = []
+    for i in index_shuffle:
+      self.batches_info.append(batches_info[i])
 
     # Nombre d'entrées/sorties dans un paquet
     self.batch_file_size = 5000
