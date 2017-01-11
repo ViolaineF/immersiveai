@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 import socket
+import struct
+import math
 
 from ImmersiveTensorflowServerConfig import ImmersiveTensorflowServerConfig
 from ModelSkeleton import ModelSkeleton
@@ -40,7 +42,7 @@ class ImmersiveTensorflowServer():
 
     return session_config
 
-  def start_listen_training(self, session):
+  def start_listen_training(self, session : tf.Session):
     if self.listening:
       print("Already listening.")
       return
@@ -56,33 +58,74 @@ class ImmersiveTensorflowServer():
     #loss_op = self.model.loss
     #eval_op = self.model.evaluation
 
+    #observing = True
+    #observations = []
+    #observationsCount = 0
+
     while self.listening:
-      print(self.get_data())
+      recv_data, length = self.get_data()
+
+      #if observing:
+      #  last_screenshot
+      #  last_action
+      #  reward
+
+
+      #  observations.append([recv_data])
+      #  observationsCount += 1
+
+      #  if observationsCount > 36000:
+      #    observing = False
+
+      #else:
+      inputs = struct.unpack('%sf' % self.model.input_size, recv_data[4:(self.model.input_size + 1) * 4])
+      outputs = struct.unpack('%sf' % self.model.output_size, recv_data[-self.model.output_size * 4:])
+
+      feed_dict = {
+        self.model.placeholders[0] : inputs,
+        self.model.placeholders[1] : outputs
+        }
+
+      inference = session.run(self.model.inference, feed_dict = feed_dict)
+      answer = inference.tolist()[0]
+
+      answer = struct.pack('%sf' % self.model.output_size, *answer)
+
+      self.send_data(answer)
 
       # session.run(train_op, feed_dict = {... data}=
 
   def get_data(self):
-    data = None
-    done = False
+    recv_size = 32768
+    data, _ = self.recv_ack(recv_size)
+    length = int.from_bytes(data[:4], 'little')
 
-    while not done:
-      data, _ = self.sock.recvfrom(1024)
-      #if get marker done:
-      done = True
+    recv_count = math.ceil(length / recv_size)
 
-    return data
+    for i in range(1, recv_count):
+      tmp, _ = self.recv_ack(recv_size)
+      data += tmp
+
+    return data, length
+
+  def recv_ack(self, size):
+    data, ip = self.sock.recvfrom(size)
+    ack = "ACK".encode()
+    self.send_data(ack)
+    return data, ip
 
   def stop_listening(self):
     self.listening = False
     self.sock.close()
 
-  def send_data(self, data : list):
+  def send_data(self, data : bytes):
     self.sock.sendto(data, (self.config.ip, self.config.send_port))
 
 def main():
+  # Add model loading
   config = ImmersiveTensorflowServerConfig()
   model_config = SimpleDNNConfig("SimpleDNN/config.ini")
-  model = SimpleDNNModel(model_config, 20, 2)
+  model = SimpleDNNModel(model_config, 480*270, 4)
   immersiveTensorflowServer = ImmersiveTensorflowServer(config, model)
   immersiveTensorflowServer.run_model_training()
 

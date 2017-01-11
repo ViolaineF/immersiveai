@@ -13,6 +13,11 @@ class SimpleDNNModel(ModelSkeleton):
       self.input_placeholder = tf.placeholder(tf.float32, (input_size))
       self.output_placeholder = tf.placeholder(tf.float32, (output_size))
 
+      self.inference
+      self.loss
+      self.training
+      self.evaluation
+
     @define_scope
     def placeholders(self):
       return (self.input_placeholder, self.output_placeholder)
@@ -20,22 +25,23 @@ class SimpleDNNModel(ModelSkeleton):
     @define_scope
     def inference(self):
 
-      with tf.name_scope("DNN_0"):
-        weights = tf.get_variable("weights", shape = (self.input_size, self.config.layers_size), dtype = tf.float32)
-        biases = tf.get_variable("biases", shape = (self.config.layers_size), dtype = tf.float32)
+      with tf.name_scope("DNN_start"):
+        weights = tf.get_variable("weights_start", shape = (self.input_size, self.config.layers_size), dtype = tf.float32)
+        biases = tf.get_variable("biases_start", shape = (self.config.layers_size), dtype = tf.float32)
 
-        layer = tf.matmul(self.input_placeholder, weights) + biases
+        reshape_input = tf.reshape(self.input_placeholder, (-1, self.input_size))
+        layer = tf.matmul(reshape_input, weights) + biases
 
-      for i in range(1, config.layer_count):
-        with tf.name_scope("DNN_" + str(index)):
-          weights = tf.get_variable("weights", shape = (self.config.layers_size, self.config.layers_size), dtype = tf.float32)
-          biases = tf.get_variable("biases", shape = (self.config.layers_size), dtype = tf.float32)
+      for i in range(1, self.config.layer_count):
+        with tf.name_scope("DNN_" + str(i)):
+          weights = tf.get_variable("weights_" + str(i), shape = (self.config.layers_size, self.config.layers_size), dtype = tf.float32)
+          biases = tf.get_variable("biases_" + str(i), shape = (self.config.layers_size), dtype = tf.float32)
 
           layer = tf.matmul(layer, weights) + biases
 
       with tf.name_scope("DNN_last"):
-        weights = tf.get_variable("weights", shape = (self.config.layers_size, self.output_size), dtype = tf.float32)
-        biases = tf.get_variable("biases", shape = (self.output_size), dtype = tf.float32)
+        weights = tf.get_variable("weights_last", shape = (self.config.layers_size, self.output_size), dtype = tf.float32)
+        biases = tf.get_variable("biases_last", shape = (self.output_size), dtype = tf.float32)
 
         layer = tf.matmul(layer, weights) + biases
 
