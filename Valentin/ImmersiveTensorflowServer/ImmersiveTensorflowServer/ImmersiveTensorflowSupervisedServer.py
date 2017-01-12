@@ -43,35 +43,17 @@ class ImmersiveTensorflowSupervisedServer(ImmersiveTensorflowServer):
 
     self.listening = True
     self.sock.bind((self.config.ip, self.config.listen_port))
-    #self.sock.setblocking(False);
 
     placeholders = self.model.placeholders
 
-        #inference_op = self.model.inference
+    inference_op = self.model.inference
     #train_op = self.model.training
     #loss_op = self.model.loss
     #eval_op = self.model.evaluation
 
-    #observing = True
-    #observations = []
-    #observationsCount = 0
-
     while self.listening:
       recv_data, length = self.get_data()
 
-      #if observing:
-      #  last_screenshot
-      #  last_action
-      #  reward
-
-
-      #  observations.append([recv_data])
-      #  observationsCount += 1
-
-      #  if observationsCount > 36000:
-      #    observing = False
-
-      #else:
       inputs = recv_data[4:self.model.input_size + 4]
       inputs = np.fromstring(inputs, dtype=np.uint8)
       inputs = inputs.astype(np.float32)
@@ -82,16 +64,17 @@ class ImmersiveTensorflowSupervisedServer(ImmersiveTensorflowServer):
         self.model.placeholders[1] : outputs
         }
 
-      inference = session.run(self.model.inference, feed_dict = feed_dict)
+      inference = session.run(inference_op, feed_dict = feed_dict)
       answer = inference.tolist()[0]
 
       answer = struct.pack('%sf' % self.model.output_size, *answer)
       self.send_data(answer)
+      #self.send_data("ack".encode())
 
 def main():
   # Add model loading
   config = ImmersiveTensorflowServerConfig()
-  model_config = SimpleDNNConfig("SimpleDNN/config.ini")
+  model_config = SimpleDNNConfig("SimpleDNN/SimpleDNNConfig.ini")
   model = SimpleDNNModel(model_config, 480*270*3, 4)
   immersiveTensorflowServer = ImmersiveTensorflowSupervisedServer(config, model)
   immersiveTensorflowServer.run_model_training()

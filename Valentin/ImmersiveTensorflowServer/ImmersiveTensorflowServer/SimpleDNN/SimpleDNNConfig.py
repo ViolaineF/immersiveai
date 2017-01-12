@@ -1,7 +1,7 @@
 from configparser import SafeConfigParser
 
 class SimpleDNNConfig(object):
-    def __init__(self, config_path = "config.ini"):
+    def __init__(self, config_path = "SimpleDNNConfig.ini"):
       config_parser = SafeConfigParser()
       config_parser.read(config_path)
 
