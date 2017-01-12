@@ -10,7 +10,7 @@ class SimpleDNNModel(ModelSkeleton):
       self.input_size = input_size
       self.output_size = output_size
 
-      self.input_placeholder = tf.placeholder(tf.float32, (input_size))
+      self.input_placeholder = tf.placeholder(tf.uint8, (input_size))
       self.output_placeholder = tf.placeholder(tf.float32, (output_size))
 
       self.inference
@@ -30,7 +30,8 @@ class SimpleDNNModel(ModelSkeleton):
         biases = tf.get_variable("biases_start", shape = (self.config.layers_size), dtype = tf.float32)
 
         reshape_input = tf.reshape(self.input_placeholder, (-1, self.input_size))
-        layer = tf.matmul(reshape_input, weights) + biases
+        convert_input = tf.cast(reshape_input, dtype = tf.float32)
+        layer = tf.matmul(convert_input, weights) + biases
 
       for i in range(1, self.config.layer_count):
         with tf.name_scope("DNN_" + str(i)):

@@ -15,4 +15,4 @@ class ImmersiveTensorflowServerConfig():
     ### Session
     session_config = config_parser["Session"]
 
-    self.gpu_allow_growth = session_config["gpu_allow_growth"] is "True"
+    self.gpu_allow_growth = session_config["gpu_allow_growth"] == "True"

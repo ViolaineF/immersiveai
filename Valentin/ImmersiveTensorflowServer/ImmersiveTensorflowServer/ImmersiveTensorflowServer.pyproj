@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0bff10b6-1f40-4884-8131-87c8b4fe6f23</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ImmersiveTensorflowServer.py</StartupFile>
+    <StartupFile>ImmersiveTensorflowSupervisedServer.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -28,7 +28,13 @@
     </Compile>
     <Compile Include="CLDNN\SpeechDataUtils.py" />
     <Compile Include="CLDNN\__init__.py" />
-    <Compile Include="ImmersiveTensorflowServer.py" />
+    <Compile Include="ImmersiveTensorflowReinforcementServer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ImmersiveTensorflowServer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ImmersiveTensorflowSupervisedServer.py" />
     <Compile Include="ImmersiveTensorflowServerConfig.py">
       <SubType>Code</SubType>
     </Compile>
@@ -50,6 +56,7 @@
     <Folder Include="SimpleDNN\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ImmersiveTensorflowServer.ini" />
     <Content Include="SimpleDNN\config.ini" />
   </ItemGroup>
   <PropertyGroup>
