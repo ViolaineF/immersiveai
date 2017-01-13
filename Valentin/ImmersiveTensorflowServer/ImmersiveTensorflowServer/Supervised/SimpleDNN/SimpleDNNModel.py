@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from ModelSkeleton import ModelSkeleton, define_scope
-from SimpleDNN.SimpleDNNConfig import SimpleDNNConfig
+from Supervised.ModelSkeleton import ModelSkeleton, define_scope
+from Supervised.SimpleDNN.SimpleDNNConfig import SimpleDNNConfig
 
 class SimpleDNNModel(ModelSkeleton):
     def __init__(self, config : SimpleDNNConfig, input_size : int, output_size : int):

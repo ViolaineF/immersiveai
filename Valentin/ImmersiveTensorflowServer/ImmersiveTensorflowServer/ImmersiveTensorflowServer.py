@@ -33,4 +33,3 @@ class ImmersiveTensorflowServer(object):
   def send_data(self, data : bytes):
     self.sock.sendto(data, (self.config.ip, self.config.send_port))
 
-

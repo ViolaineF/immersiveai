@@ -5,14 +5,14 @@ import struct
 import math
 
 from ImmersiveTensorflowServer import ImmersiveTensorflowServer
-from ImmersiveTensorflowServerConfig import ImmersiveTensorflowServerConfig
-from ModelSkeleton import ModelSkeleton
+from Supervised.SupervisedServerConfig import SupervisedServerConfig
+from Supervised.ModelSkeleton import ModelSkeleton
 #from SimpleDNN import SimpleDNNModel, SimpleDNNConfig
-from SimpleDNN.SimpleDNNConfig import SimpleDNNConfig
-from SimpleDNN.SimpleDNNModel import SimpleDNNModel
+from Supervised.SimpleDNN.SimpleDNNConfig import SimpleDNNConfig
+from Supervised.SimpleDNN.SimpleDNNModel import SimpleDNNModel
 
-class ImmersiveTensorflowSupervisedServer(ImmersiveTensorflowServer):
-  def __init__(self, config : ImmersiveTensorflowServerConfig, model : ModelSkeleton):
+class SupervisedServer(ImmersiveTensorflowServer):
+  def __init__(self, config : SupervisedServerConfig, model : ModelSkeleton):
     super().__init__()
 
     self.config = config
@@ -70,13 +70,3 @@ class ImmersiveTensorflowSupervisedServer(ImmersiveTensorflowServer):
       answer = struct.pack('%sf' % self.model.output_size, *answer)
       self.send_data(answer)
       #self.send_data("ack".encode())
-
-def main():
-  # Add model loading
-  config = ImmersiveTensorflowServerConfig()
-  model_config = SimpleDNNConfig("SimpleDNN/SimpleDNNConfig.ini")
-  model = SimpleDNNModel(model_config, 480*270*3, 4)
-  immersiveTensorflowServer = ImmersiveTensorflowSupervisedServer(config, model)
-  immersiveTensorflowServer.run_model_training()
-
-main()

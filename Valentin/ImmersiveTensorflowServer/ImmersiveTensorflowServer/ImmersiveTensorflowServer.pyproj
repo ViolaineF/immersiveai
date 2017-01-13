@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>0bff10b6-1f40-4884-8131-87c8b4fe6f23</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ImmersiveTensorflowSupervisedServer.py</StartupFile>
+    <StartupFile>main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,53 +22,69 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CLDNN\CLDNNModel.py" />
-    <Compile Include="CLDNN\CLDNNConfig.py">
+    <Compile Include="Reinforcement\ModelSkeleton.py" />
+    <Compile Include="Reinforcement\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CLDNN\SpeechDataUtils.py" />
-    <Compile Include="CLDNN\__init__.py" />
-    <Compile Include="DQN\DQNConfig.py">
+    <Compile Include="Supervised\CLDNN\CLDNNModel.py" />
+    <Compile Include="Supervised\CLDNN\CLDNNConfig.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DQN\DQNModel.py">
+    <Compile Include="Supervised\CLDNN\SpeechDataUtils.py" />
+    <Compile Include="Supervised\CLDNN\__init__.py" />
+    <Compile Include="Reinforcement\DQN\DQNConfig.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DQN\__init__.py">
+    <Compile Include="Reinforcement\DQN\DQNModel.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ImmersiveTensorflowReinforcementServer.py">
+    <Compile Include="Reinforcement\DQN\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Reinforcement\ReinforcementServer.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ImmersiveTensorflowServer.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ImmersiveTensorflowSupervisedServer.py" />
-    <Compile Include="ImmersiveTensorflowServerConfig.py">
+    <Compile Include="main.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ModelSkeleton.py">
+    <Compile Include="Reinforcement\ReinforcementServerConfig.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SimpleDNN\SimpleDNNModel.py">
+    <Compile Include="Supervised\SupervisedServer.py" />
+    <Compile Include="Supervised\SupervisedServerConfig.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SimpleDNN\SimpleDNNConfig.py">
+    <Compile Include="Supervised\ModelSkeleton.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SimpleDNN\__init__.py">
+    <Compile Include="Supervised\SimpleDNN\SimpleDNNModel.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Supervised\SimpleDNN\SimpleDNNConfig.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Supervised\SimpleDNN\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Supervised\__init__.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="CLDNN\" />
-    <Folder Include="DQN\" />
-    <Folder Include="SimpleDNN\" />
+    <Folder Include="Supervised\CLDNN\" />
+    <Folder Include="Reinforcement\DQN\" />
+    <Folder Include="Supervised\" />
+    <Folder Include="Reinforcement\" />
+    <Folder Include="Supervised\SimpleDNN\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DQN\DQNConfig.ini" />
-    <Content Include="ImmersiveTensorflowServer.ini" />
-    <Content Include="SimpleDNN\SimpleDNNConfig.ini" />
+    <Content Include="Reinforcement\DQN\ModelConfig.ini" />
+    <Content Include="Reinforcement\ServerConfig.ini" />
+    <Content Include="ServerConfig.ini" />
+    <Content Include="Supervised\SimpleDNN\ModelConfig.ini" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

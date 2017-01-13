@@ -6,16 +6,16 @@ import math
 from collections import deque
 
 from ImmersiveTensorflowServer import ImmersiveTensorflowServer
-from ImmersiveTensorflowServerConfig import ImmersiveTensorflowServerConfig
-from DQN.DQNModel import DQNModel, DQNConfig
+from Reinforcement.ReinforcementServerConfig import ReinforcementServerConfig
+from Reinforcement.DQN.DQNModel import DQNModel, DQNConfig
 
-from ModelSkeleton import ModelSkeleton
+from Reinforcement.ModelSkeleton import ModelSkeleton
 
 class Observation():
   pass
 
-class ImmersiveTensorflowReinforcementServer(ImmersiveTensorflowServer):
-  def __init__(self, config : ImmersiveTensorflowServerConfig, model : ModelSkeleton):
+class ReinforcementServer(ImmersiveTensorflowServer):
+  def __init__(self, config : ReinforcementServerConfig, model : ModelSkeleton):
     super().__init__()
 
     self.config = config
@@ -78,7 +78,7 @@ class ImmersiveTensorflowReinforcementServer(ImmersiveTensorflowServer):
       self.listening = (recv_type != 2)
 
       self.register_reward(recv_reward)
-      self.create_observation()
+      self.create_observation(recv_frame, recv_reward)
 
       if self.observing:
         last_screenshot
@@ -156,15 +156,14 @@ class ImmersiveTensorflowReinforcementServer(ImmersiveTensorflowServer):
     self.last_action = self.choose_next_action()
 
   def choose_next_action(self):
-    # TO DO
+    
+
     return 0
 
 def main():
   # add model loading
-  config = ImmersiveTensorflowServerConfig()
+  config = SupervisedServerConfig()
   model_config = DQNConfig("DQN/DQNConfig.ini")
-  model = DQNModel(model_config, 480*270*3, 4)
-  immersivetensorflowserver = ImmersiveTensorflowReinforcementServer(config, model)
+  model = DQNModel(model_config, 480*270*3, 5)
+  immersivetensorflowserver = ReinforcementServer(config, model)
   immersivetensorflowserver.run_model_training()
-
-main()

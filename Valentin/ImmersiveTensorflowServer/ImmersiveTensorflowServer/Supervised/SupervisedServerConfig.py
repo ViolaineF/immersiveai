@@ -1,7 +1,7 @@
 from configparser import SafeConfigParser
 
-class ImmersiveTensorflowServerConfig():
-  def __init__(self, config_path = "ImmersiveTensorflowServer.ini"):
+class SupervisedServerConfig():
+  def __init__(self, config_path = "ServerConfig.ini"):
     config_parser = SafeConfigParser()
     config_parser.read(config_path)
 

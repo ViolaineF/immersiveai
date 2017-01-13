@@ -1,7 +1,7 @@
 from configparser import SafeConfigParser
 
-class DQNConfig(object):
-  def __init__(self, config_path = "DQNConfig.ini"):
+class SimpleDNNConfig(object):
+  def __init__(self, config_path = "SimpleDNNConfig.ini"):
     config_parser = SafeConfigParser()
     config_parser.read(config_path)
 
@@ -11,3 +11,14 @@ class DQNConfig(object):
 
     training_config = config_parser["Training"]
     self.learning_rate = float(training_config["learning_rate"])
+
+#      [Input]
+#width = 480
+#height = 270
+#depth = 3
+
+#[Actions]
+#count = 5
+
+#[Training]
+#learning_rate = 0.5

@@ -1,20 +1,20 @@
 import tensorflow as tf
 
-from ModelSkeleton import ModelSkeleton, define_scope
-from DQN.DQNConfig import DQNConfig
+from Reinforcement.ModelSkeleton import ModelSkeleton, define_scope
+from Reinforcement.DQN.DQNConfig import DQNConfig
 
 class DQNModel(ModelSkeleton):
-  def __init__(self, config : DQNConfig, input_width : int, input_height : int, input_depth : int, action_count : int):
+  def __init__(self, config : DQNConfig):
     self.config = config
     
-    self.input_size = input_width * input_height * input_depth
-    self.input_width = input_width
-    self.input_height = input_height
-    self.input_depth = input_depth
-    self.output_size = self.action_count = action_count
+    self.input_size = config.input_width * config.input_height * config.input_depth
+    self.input_width = config.input_width
+    self.input_height = config.input_height
+    self.input_depth = config.input_depth
+    self.output_size = self.action_count = config.actions_count
 
     self.input_placeholder = tf.placeholder(tf.float32, (None, self.input_size))
-    self.action_placeholder = tf.placeholder(tf.float32, (None, action_count))
+    self.action_placeholder = tf.placeholder(tf.float32, (None, config.actions_count))
     self.target_placeholder = tf.placeholder(tf.float32, (None))
 
     self._placeholders = {
@@ -24,9 +24,9 @@ class DQNModel(ModelSkeleton):
     }
 
     self.inference
-    self.loss
-    self.training
-    self.evaluation
+    #self.loss
+    #self.training
+    #self.evaluation
 
   @define_scope
   def placeholders(self):
@@ -81,8 +81,3 @@ class DQNModel(ModelSkeleton):
   @define_scope
   def evaluation(self):
     return super().evaluation()
-
-def main():
-  dqn = DQNModel(None, 480, 270, 3, 10)
-
-main()
