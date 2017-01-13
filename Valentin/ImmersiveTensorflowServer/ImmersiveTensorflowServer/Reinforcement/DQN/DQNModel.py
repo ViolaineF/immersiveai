@@ -24,9 +24,8 @@ class DQNModel(ModelSkeleton):
     }
 
     self.inference
-    #self.loss
-    #self.training
-    #self.evaluation
+    self.loss
+    self.training
 
   @define_scope
   def placeholders(self):
@@ -72,12 +71,11 @@ class DQNModel(ModelSkeleton):
 
   @define_scope
   def loss(self):
-    return super().loss()
+    action_rewards = tf.reduce_sum(tf.mul(self.inference, self.action_placeholder), axis=1)
+    square_diff = tf.square(self.target_placeholder - action_rewards)
+    return tf.reduce_mean(square_diff)
 
   @define_scope
   def training(self):
-    return super().training()
-
-  @define_scope
-  def evaluation(self):
-    return super().evaluation()
+    optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
+    return optimizer.minimize(self.loss)

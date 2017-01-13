@@ -20,18 +20,13 @@ class ModelSkeleton(object):
     # To inherit
     pass
 
-  @define_scope
+  @define_scope 
   def loss(self):
     # To inherit
     pass
 
   @define_scope
   def training(self):
-    # To inherit
-    pass
-
-  @define_scope
-  def evaluation(self):
     # To inherit
     pass
 
