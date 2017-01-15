@@ -1,9 +1,11 @@
 import tensorflow as tf
+from tensorflow.python.client import timeline
 import numpy as np
 import socket
 import struct
 import math
 import random
+import gc
 from collections import deque
 
 from ImmersiveTensorflowServer import ImmersiveTensorflowServer
@@ -30,12 +32,18 @@ class ReinforcementServer(ImmersiveTensorflowServer):
     self.observations = deque()
     self.observations_count = 0
 
+    self.score = 0
     self.rewards = deque()
     self.rewards_count = 0
+
+    self.test = True
 
   def run_model_training(self):
     session_config = self.get_session_config()
     self.session = tf.Session(config = session_config)
+
+    self.run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+    self.run_metadata = tf.RunMetadata()
 
     self.init_model()
     self.start_listen_training()
@@ -92,6 +100,11 @@ class ReinforcementServer(ImmersiveTensorflowServer):
 
       self.send_data(struct.pack('i', self.last_action))
 
+      if (self.observations_count % 1000) == 0:
+        print(self.observations_count, ')\tScore =', self.score)
+      
+      if (self.observations_count % 50) == 0:
+        gc.collect()
       #else:
       #  inputs = recv_data[4:self.model.input_size + 4]
       #  inputs = np.fromstring(inputs, dtype=np.uint8)
@@ -119,6 +132,7 @@ class ReinforcementServer(ImmersiveTensorflowServer):
     i += 4 # recv_type size (int => 4 bytes)
 
     recv_frame = recv_data[i : i + self.model.input_size]
+    recv_frame = np.fromstring(recv_frame, dtype=np.uint8).astype(float)
     i += self.model.input_size # pixel count size (1 pixel => 1 byte)
 
     #recv_action = recv_data[i : i + 4]
@@ -134,6 +148,7 @@ class ReinforcementServer(ImmersiveTensorflowServer):
 
   def register_reward(self, reward : float):
     if reward != 0:
+      self.score += reward
       if self.rewards_count > self.config.max_reward_count:
         self.rewards.popleft()
       self.rewards.append(reward)
@@ -144,6 +159,7 @@ class ReinforcementServer(ImmersiveTensorflowServer):
       self.last_state = frame
     # Building observation
     observation = (self.last_state, self.action_to_onehot(self.last_action), reward, frame)
+    observation = np.array(observation)
     # Appending observation, if full then we pop the oldest one to make room for the new one
     if self.observations_count > self.config.max_frame_count:
       self.observations.popleft()
@@ -155,9 +171,10 @@ class ReinforcementServer(ImmersiveTensorflowServer):
     if take_random_action :
       action = random.randrange(self.model.action_count)
     else :
+      last_state_as_array = np.reshape(self.last_state, (1, self.model.input_size))
       feed_dict = \
       {
-        self.model.input_placeholder : self.last_state
+        self.model.input_placeholder : last_state_as_array
       }
       inference = self.session.run(self.model.inference, feed_dict = feed_dict)[0]
       action = np.argmax(inference)
@@ -173,6 +190,7 @@ class ReinforcementServer(ImmersiveTensorflowServer):
     actions         = [d[1] for d in mini_batch]
     rewards         = [d[2] for d in mini_batch]
     current_states  = [d[3] for d in mini_batch]
+
     feed_dict = \
     {
       self.model.input_placeholder : current_states
@@ -180,8 +198,17 @@ class ReinforcementServer(ImmersiveTensorflowServer):
     #print(len(current_states))
     #input()
     expected_rewards_by_agent = []
-    inferenced_rewards = self.session.run(self.model.inference, feed_dict = feed_dict)
-    for i in range(self.config.mini_batch_size):
+    if self.test:
+      inferenced_rewards = self.session.run(self.model.inference, feed_dict = feed_dict, options = self.run_options, run_metadata = self.run_metadata)
+      tl = timeline.Timeline(self.run_metadata.step_stats)
+      ctf = tl.generate_chrome_trace_format()
+      with open('timeline.json', 'w') as f:
+        f.write(ctf)
+      self.test = False
+    else:
+      inferenced_rewards = self.session.run(self.model.inference, feed_dict = feed_dict)
+
+    for i in range(len(mini_batch)):
       expected_rewards_by_agent.append(rewards[i] + self.config.future_reward_factor * np.max(inferenced_rewards[i]))
     feed_dict = \
     {

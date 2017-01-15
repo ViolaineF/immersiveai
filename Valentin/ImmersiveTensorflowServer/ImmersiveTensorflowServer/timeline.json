@@ -1,0 +1,2498 @@
+{
+    "traceEvents": [
+        {
+            "pid": 0,
+            "name": "process_name",
+            "args": {
+                "name": "Allocators"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 1,
+            "name": "process_name",
+            "args": {
+                "name": "/job:localhost/replica:0/task:0/cpu:0 Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 2,
+            "name": "process_name",
+            "args": {
+                "name": "/job:localhost/replica:0/task:0/cpu:0 Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 3,
+            "name": "process_name",
+            "args": {
+                "name": "/job:localhost/replica:0/task:0/gpu:0 Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 4,
+            "name": "process_name",
+            "args": {
+                "name": "/job:localhost/replica:0/task:0/gpu:0 Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 5,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:all Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 6,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:all Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 7,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:12 Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 8,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:12 Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 9,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:17 Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 10,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:17 Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 11,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/memcpy Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 12,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/memcpy Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 13,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:13 Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 14,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:13 Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 15,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:7 Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 16,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:7 Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 17,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:14 Compute"
+            },
+            "ph": "M"
+        },
+        {
+            "pid": 18,
+            "name": "process_name",
+            "args": {
+                "name": "/gpu:0/stream:14 Tensors"
+            },
+            "ph": "M"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "NoOp",
+                "name": "_SOURCE"
+            },
+            "dur": 17,
+            "ts": 1484491729802143,
+            "pid": 1,
+            "name": "NoOp",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "NoOp",
+                "name": "_SOURCE"
+            },
+            "dur": 29,
+            "ts": 1484491729802137,
+            "pid": 3,
+            "name": "NoOp",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Const",
+                "name": "inference/Reshape/shape"
+            },
+            "dur": 22,
+            "ts": 1484491729802174,
+            "pid": 3,
+            "name": "Const",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/conv1/Variable"
+            },
+            "dur": 7,
+            "ts": 1484491729802198,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/conv1/Variable_1"
+            },
+            "dur": 4,
+            "ts": 1484491729802206,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/conv2/Variable"
+            },
+            "dur": 3,
+            "ts": 1484491729802211,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/conv2/Variable_1"
+            },
+            "dur": 4,
+            "ts": 1484491729802216,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/conv3/Variable"
+            },
+            "dur": 3,
+            "ts": 1484491729802221,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/conv3/Variable_1"
+            },
+            "dur": 797,
+            "ts": 1484491729802226,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Const",
+                "name": "inference/conv3/Reshape/shape"
+            },
+            "dur": 5,
+            "ts": 1484491729803025,
+            "pid": 3,
+            "name": "Const",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/feed_forward1/Variable"
+            },
+            "dur": 4,
+            "ts": 1484491729803031,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/feed_forward1/Variable_1"
+            },
+            "dur": 3,
+            "ts": 1484491729803036,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/feed_forward2/Variable"
+            },
+            "dur": 4,
+            "ts": 1484491729803040,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Variable",
+                "name": "inference/feed_forward2/Variable_1"
+            },
+            "dur": 3,
+            "ts": 1484491729803045,
+            "pid": 3,
+            "name": "Variable",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/conv1/Variable/read",
+                "input0": "inference/conv1/Variable"
+            },
+            "dur": 4,
+            "ts": 1484491729803050,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/conv1/Variable_1/read",
+                "input0": "inference/conv1/Variable_1"
+            },
+            "dur": 7,
+            "ts": 1484491729803056,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/conv2/Variable/read",
+                "input0": "inference/conv2/Variable"
+            },
+            "dur": 5,
+            "ts": 1484491729803065,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/conv2/Variable_1/read",
+                "input0": "inference/conv2/Variable_1"
+            },
+            "dur": 19,
+            "ts": 1484491729803072,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/conv3/Variable/read",
+                "input0": "inference/conv3/Variable"
+            },
+            "dur": 5,
+            "ts": 1484491729803094,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/conv3/Variable_1/read",
+                "input0": "inference/conv3/Variable_1"
+            },
+            "dur": 4,
+            "ts": 1484491729803101,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/feed_forward1/Variable/read",
+                "input0": "inference/feed_forward1/Variable"
+            },
+            "dur": 4,
+            "ts": 1484491729803107,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/feed_forward1/Variable_1/read",
+                "input0": "inference/feed_forward1/Variable_1"
+            },
+            "dur": 6,
+            "ts": 1484491729803113,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/feed_forward2/Variable/read",
+                "input0": "inference/feed_forward2/Variable"
+            },
+            "dur": 4,
+            "ts": 1484491729803130,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Identity",
+                "name": "inference/feed_forward2/Variable_1/read",
+                "input0": "inference/feed_forward2/Variable_1"
+            },
+            "dur": 3,
+            "ts": 1484491729803137,
+            "pid": 3,
+            "name": "Identity",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Reshape",
+                "name": "inference/Reshape",
+                "input0": "_recv_input_placeholder_0/_1",
+                "input1": "inference/Reshape/shape"
+            },
+            "dur": 17,
+            "ts": 1484491729804299,
+            "pid": 3,
+            "name": "Reshape",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D",
+                "input0": "inference/Reshape",
+                "input1": "inference/conv1/Variable/read"
+            },
+            "dur": 340954,
+            "ts": 1484491729804319,
+            "pid": 3,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv1/add",
+                "input0": "inference/conv1/Conv2D",
+                "input1": "inference/conv1/Variable_1/read"
+            },
+            "dur": 42,
+            "ts": 1484491730145288,
+            "pid": 3,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv1/Relu",
+                "input0": "inference/conv1/add"
+            },
+            "dur": 25,
+            "ts": 1484491730145335,
+            "pid": 3,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv1/MaxPool",
+                "input0": "inference/conv1/Relu"
+            },
+            "dur": 66,
+            "ts": 1484491730145365,
+            "pid": 3,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D",
+                "input0": "inference/conv1/MaxPool",
+                "input1": "inference/conv2/Variable/read"
+            },
+            "dur": 1160,
+            "ts": 1484491730145436,
+            "pid": 3,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv2/add",
+                "input0": "inference/conv2/Conv2D",
+                "input1": "inference/conv2/Variable_1/read"
+            },
+            "dur": 22,
+            "ts": 1484491730146603,
+            "pid": 3,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv2/Relu",
+                "input0": "inference/conv2/add"
+            },
+            "dur": 17,
+            "ts": 1484491730146629,
+            "pid": 3,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv2/MaxPool",
+                "input0": "inference/conv2/Relu"
+            },
+            "dur": 49,
+            "ts": 1484491730146650,
+            "pid": 3,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D",
+                "input0": "inference/conv2/MaxPool",
+                "input1": "inference/conv3/Variable/read"
+            },
+            "dur": 6250,
+            "ts": 1484491730146704,
+            "pid": 3,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv3/add",
+                "input0": "inference/conv3/Conv2D",
+                "input1": "inference/conv3/Variable_1/read"
+            },
+            "dur": 25,
+            "ts": 1484491730152963,
+            "pid": 3,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv3/Relu",
+                "input0": "inference/conv3/add"
+            },
+            "dur": 31,
+            "ts": 1484491730152993,
+            "pid": 3,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv3/MaxPool",
+                "input0": "inference/conv3/Relu"
+            },
+            "dur": 55,
+            "ts": 1484491730153037,
+            "pid": 3,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Reshape",
+                "name": "inference/conv3/Reshape",
+                "input0": "inference/conv3/MaxPool",
+                "input1": "inference/conv3/Reshape/shape"
+            },
+            "dur": 6,
+            "ts": 1484491730153094,
+            "pid": 3,
+            "name": "Reshape",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MatMul",
+                "name": "inference/feed_forward1/MatMul",
+                "input0": "inference/conv3/Reshape",
+                "input1": "inference/feed_forward1/Variable/read"
+            },
+            "dur": 246760,
+            "ts": 1484491730153102,
+            "pid": 3,
+            "name": "MatMul",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/feed_forward1/add",
+                "input0": "inference/feed_forward1/MatMul",
+                "input1": "inference/feed_forward1/Variable_1/read"
+            },
+            "dur": 41,
+            "ts": 1484491730399869,
+            "pid": 3,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/feed_forward1/Relu",
+                "input0": "inference/feed_forward1/add"
+            },
+            "dur": 21,
+            "ts": 1484491730399913,
+            "pid": 3,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MatMul",
+                "name": "inference/feed_forward2/MatMul",
+                "input0": "inference/feed_forward1/Relu",
+                "input1": "inference/feed_forward2/Variable/read"
+            },
+            "dur": 34,
+            "ts": 1484491730399936,
+            "pid": 3,
+            "name": "MatMul",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/feed_forward2/add",
+                "input0": "inference/feed_forward2/MatMul",
+                "input1": "inference/feed_forward2/Variable_1/read"
+            },
+            "dur": 18,
+            "ts": 1484491730399972,
+            "pid": 3,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 96,
+            "ts": 1484491729808559,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 6,
+            "ts": 1484491729808660,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 230,
+            "ts": 1484491730142208,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 4,
+            "ts": 1484491730142596,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 154,
+            "ts": 1484491730142604,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 296,
+            "ts": 1484491730144607,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 199,
+            "ts": 1484491730144913,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 10,
+            "ts": 1484491730145441,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 157,
+            "ts": 1484491730145456,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 46,
+            "ts": 1484491730145618,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv1/add"
+            },
+            "dur": 47,
+            "ts": 1484491730145667,
+            "pid": 5,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv1/Relu"
+            },
+            "dur": 54,
+            "ts": 1484491730145719,
+            "pid": 5,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv1/MaxPool"
+            },
+            "dur": 42,
+            "ts": 1484491730145777,
+            "pid": 5,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 30,
+            "ts": 1484491730145824,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 13,
+            "ts": 1484491730145858,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 10,
+            "ts": 1484491730145880,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 109,
+            "ts": 1484491730145895,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 8,
+            "ts": 1484491730146110,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 82,
+            "ts": 1484491730146122,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 91,
+            "ts": 1484491730146336,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 69,
+            "ts": 1484491730146435,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 9,
+            "ts": 1484491730146708,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 95,
+            "ts": 1484491730146722,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 12,
+            "ts": 1484491730146821,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv2/add"
+            },
+            "dur": 8,
+            "ts": 1484491730146838,
+            "pid": 5,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv2/Relu"
+            },
+            "dur": 4,
+            "ts": 1484491730146851,
+            "pid": 5,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv2/MaxPool"
+            },
+            "dur": 11,
+            "ts": 1484491730146858,
+            "pid": 5,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 7,
+            "ts": 1484491730146873,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 10,
+            "ts": 1484491730146885,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 103,
+            "ts": 1484491730146904,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730147155,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730147162,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730147169,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 59,
+            "ts": 1484491730147175,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 81,
+            "ts": 1484491730147361,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 49,
+            "ts": 1484491730147452,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 19,
+            "ts": 1484491730147724,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 79,
+            "ts": 1484491730147794,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 44,
+            "ts": 1484491730147746,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 1,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730147877,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 170,
+            "ts": 1484491730147884,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 50,
+            "ts": 1484491730148057,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 20,
+            "ts": 1484491730151442,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 258,
+            "ts": 1484491730151598,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 129,
+            "ts": 1484491730151466,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 1,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 4,
+            "ts": 1484491730151868,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 607,
+            "ts": 1484491730151876,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 129,
+            "ts": 1484491730152487,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 11,
+            "ts": 1484491730152746,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 87,
+            "ts": 1484491730152761,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 4,
+            "ts": 1484491730153113,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730153121,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730153130,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 60,
+            "ts": 1484491730153144,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 8,
+            "ts": 1484491730153210,
+            "pid": 5,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv3/add"
+            },
+            "dur": 6,
+            "ts": 1484491730153222,
+            "pid": 5,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv3/Relu"
+            },
+            "dur": 3,
+            "ts": 1484491730153231,
+            "pid": 5,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv3/MaxPool"
+            },
+            "dur": 8,
+            "ts": 1484491730153238,
+            "pid": 5,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MatMul",
+                "name": "inference/feed_forward1/MatMul"
+            },
+            "dur": 22,
+            "ts": 1484491730400073,
+            "pid": 5,
+            "name": "MatMul",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/feed_forward1/add"
+            },
+            "dur": 5,
+            "ts": 1484491730400098,
+            "pid": 5,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/feed_forward1/Relu"
+            },
+            "dur": 3,
+            "ts": 1484491730400108,
+            "pid": 5,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MatMul",
+                "name": "inference/feed_forward2/MatMul"
+            },
+            "dur": 8,
+            "ts": 1484491730400114,
+            "pid": 5,
+            "name": "MatMul",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/feed_forward2/add"
+            },
+            "dur": 7,
+            "ts": 1484491730400125,
+            "pid": 5,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 96,
+            "ts": 1484491729808559,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 6,
+            "ts": 1484491729808660,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 230,
+            "ts": 1484491730142208,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 4,
+            "ts": 1484491730142596,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 154,
+            "ts": 1484491730142604,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 296,
+            "ts": 1484491730144607,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 199,
+            "ts": 1484491730144913,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 10,
+            "ts": 1484491730145441,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 157,
+            "ts": 1484491730145456,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 46,
+            "ts": 1484491730145618,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv1/add"
+            },
+            "dur": 47,
+            "ts": 1484491730145667,
+            "pid": 7,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv1/Relu"
+            },
+            "dur": 54,
+            "ts": 1484491730145719,
+            "pid": 7,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv1/MaxPool"
+            },
+            "dur": 42,
+            "ts": 1484491730145777,
+            "pid": 7,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 30,
+            "ts": 1484491730145824,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 13,
+            "ts": 1484491730145858,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 10,
+            "ts": 1484491730145880,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 109,
+            "ts": 1484491730145895,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 8,
+            "ts": 1484491730146110,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 82,
+            "ts": 1484491730146122,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 91,
+            "ts": 1484491730146336,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 69,
+            "ts": 1484491730146435,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 9,
+            "ts": 1484491730146708,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 95,
+            "ts": 1484491730146722,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv2/Conv2D"
+            },
+            "dur": 12,
+            "ts": 1484491730146821,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv2/add"
+            },
+            "dur": 8,
+            "ts": 1484491730146838,
+            "pid": 7,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv2/Relu"
+            },
+            "dur": 4,
+            "ts": 1484491730146851,
+            "pid": 7,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv2/MaxPool"
+            },
+            "dur": 11,
+            "ts": 1484491730146858,
+            "pid": 7,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 7,
+            "ts": 1484491730146873,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 10,
+            "ts": 1484491730146885,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 103,
+            "ts": 1484491730146904,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730147155,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730147162,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730147169,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 59,
+            "ts": 1484491730147175,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 81,
+            "ts": 1484491730147361,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 49,
+            "ts": 1484491730147452,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 19,
+            "ts": 1484491730147724,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 79,
+            "ts": 1484491730147794,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730147877,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 170,
+            "ts": 1484491730147884,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 50,
+            "ts": 1484491730148057,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 20,
+            "ts": 1484491730151442,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 258,
+            "ts": 1484491730151598,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 11,
+            "ts": 1484491730152746,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 87,
+            "ts": 1484491730152761,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 4,
+            "ts": 1484491730153113,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730153121,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 3,
+            "ts": 1484491730153130,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 60,
+            "ts": 1484491730153144,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 8,
+            "ts": 1484491730153210,
+            "pid": 7,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/conv3/add"
+            },
+            "dur": 6,
+            "ts": 1484491730153222,
+            "pid": 7,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/conv3/Relu"
+            },
+            "dur": 3,
+            "ts": 1484491730153231,
+            "pid": 7,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MaxPool",
+                "name": "inference/conv3/MaxPool"
+            },
+            "dur": 8,
+            "ts": 1484491730153238,
+            "pid": 7,
+            "name": "MaxPool",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MatMul",
+                "name": "inference/feed_forward1/MatMul"
+            },
+            "dur": 22,
+            "ts": 1484491730400073,
+            "pid": 7,
+            "name": "MatMul",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/feed_forward1/add"
+            },
+            "dur": 5,
+            "ts": 1484491730400098,
+            "pid": 7,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Relu",
+                "name": "inference/feed_forward1/Relu"
+            },
+            "dur": 3,
+            "ts": 1484491730400108,
+            "pid": 7,
+            "name": "Relu",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MatMul",
+                "name": "inference/feed_forward2/MatMul"
+            },
+            "dur": 8,
+            "ts": 1484491730400114,
+            "pid": 7,
+            "name": "MatMul",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Add",
+                "name": "inference/feed_forward2/add"
+            },
+            "dur": 7,
+            "ts": 1484491730400125,
+            "pid": 7,
+            "name": "Add",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 44,
+            "ts": 1484491730147746,
+            "pid": 9,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 129,
+            "ts": 1484491730151466,
+            "pid": 9,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 4,
+            "ts": 1484491730151868,
+            "pid": 9,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 607,
+            "ts": 1484491730151876,
+            "pid": 9,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv3/Conv2D"
+            },
+            "dur": 129,
+            "ts": 1484491730152487,
+            "pid": 9,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MEMCPYHtoD",
+                "name": "edge_57__recv_input_placeholder_0"
+            },
+            "dur": 565,
+            "ts": 1484491729803680,
+            "pid": 11,
+            "name": "MEMCPYHtoD",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 1,
+            "ts": 1484491730142194,
+            "pid": 11,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MatMul",
+                "name": "inference/feed_forward1/MatMul"
+            },
+            "dur": 1,
+            "ts": 1484491730400065,
+            "pid": 11,
+            "name": "MatMul",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MEMCPYDtoH",
+                "name": "edge_8_inference/feed_forward2/add"
+            },
+            "dur": 2,
+            "ts": 1484491730400136,
+            "pid": 11,
+            "name": "MEMCPYDtoH",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MEMCPYHtoD",
+                "name": "edge_57__recv_input_placeholder_0"
+            },
+            "dur": 565,
+            "ts": 1484491729803680,
+            "pid": 13,
+            "name": "MEMCPYHtoD",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "Conv2D",
+                "name": "inference/conv1/Conv2D"
+            },
+            "dur": 1,
+            "ts": 1484491730142194,
+            "pid": 15,
+            "name": "Conv2D",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MatMul",
+                "name": "inference/feed_forward1/MatMul"
+            },
+            "dur": 1,
+            "ts": 1484491730400065,
+            "pid": 15,
+            "name": "MatMul",
+            "tid": 0,
+            "ph": "X"
+        },
+        {
+            "cat": "Op",
+            "args": {
+                "op": "MEMCPYDtoH",
+                "name": "edge_8_inference/feed_forward2/add"
+            },
+            "dur": 2,
+            "ts": 1484491730400136,
+            "pid": 17,
+            "name": "MEMCPYDtoH",
+            "tid": 0,
+            "ph": "X"
+        }
+    ]
+}
