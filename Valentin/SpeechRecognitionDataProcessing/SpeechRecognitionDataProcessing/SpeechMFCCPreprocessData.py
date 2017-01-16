@@ -12,7 +12,10 @@ class SpeechMFCCPreprocessData(object):
         self.times = times
 
         # Opening and reading of the audio file
-        audio_file = AudioSegment.from_mp3(filename)
+        if filename.endswith(".mp3"):
+          audio_file = AudioSegment.from_mp3(filename)
+        else:
+          audio_file = AudioSegment.from_wav(filename)
 
         channels_count = audio_file.channels
         samples = audio_file.get_array_of_samples()
@@ -20,6 +23,7 @@ class SpeechMFCCPreprocessData(object):
 
         samples = np.reshape(samples, (samples_count, channels_count))
         rate = audio_file.frame_rate
+        print(rate)
 
         # Features extracting
         features = []

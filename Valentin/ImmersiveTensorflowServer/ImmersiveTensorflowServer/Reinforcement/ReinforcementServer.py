@@ -19,7 +19,7 @@ class Observation():
   pass
 
 class ReinforcementServer(ImmersiveTensorflowServer):
-  def __init__(self, config : ReinforcementServerConfig, model : ModelSkeleton, graph : tf.Graph):
+  def __init__(self, config : ReinforcementServerConfig, model : ModelSkeleton):
     super().__init__()
 
     self.config = config
