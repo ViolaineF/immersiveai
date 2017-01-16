@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 import functools
@@ -175,8 +176,8 @@ class CLDNNModel:
     
   @define_scope
   def evaluation(self):
-    correct_prediction = tf.equal(tf.argmax(self.inference, 1), tf.argmax(self.output_placeholder, 1))
-    return tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    correct_prediction = tf.equal(tf.argmax(self.inference, 2), tf.argmax(self.output_placeholder, 2))
+    return tf.cast(correct_prediction, tf.float32)
     
   @staticmethod
   def conv2d(inputTensor, weights):
@@ -212,7 +213,7 @@ def train_on_librispeech():
   BATCH_SIZE = 1
   MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
-  TRAINING_ITERATION_COUNT = 250000
+  TRAINING_ITERATION_COUNT = 125000
 
   data = SpeechDataUtils(librispeech_path = r"C:\LibriSpeech")
   train_data = data.train
@@ -223,7 +224,7 @@ def train_on_librispeech():
 
   with tf.Graph().as_default():
     options = init_model_options(max_timesteps, FEATURES_COUNT, dictionary_size, MAX_OUTPUT_SEQUENCE_LENGTH)
-    cldnn = CLDNNModel(input_placeholder, lengths_placeholder, output_placeholder, options)
+    cldnn = CLDNNModel(options)
 
     train_op = cldnn.training
     loss_op = cldnn.loss
@@ -249,9 +250,9 @@ def train_on_librispeech():
         batch_inputs, batch_lengths, batch_outputs = train_data.next_batch(BATCH_SIZE, one_hot = True)
 
         feed_dict = {
-          input_placeholder : batch_inputs,
-          lengths_placeholder : batch_lengths,
-          output_placeholder : batch_outputs
+          cldnn.input_placeholder : batch_inputs,
+          cldnn.lengths_placeholder : batch_lengths,
+          cldnn.output_placeholder : batch_outputs
           }
 
         _, loss_value = session.run([train_op, loss_op], feed_dict = feed_dict)
@@ -267,11 +268,17 @@ def train_on_librispeech():
           saver.save(session, checkpoint_file, global_step = i)
 
       # EVALUTATION
-      total_eval = 0
+      total_eval = np.zeros(22)
       print("Testing model on", eval_iterations_count, "samples")
       for i in tqdm(range(eval_iterations_count)):
         batch_inputs, batch_lengths, batch_outputs = eval_data.next_batch(1, one_hot = True)
-        total_eval += session.run(eval_op, feed_dict = feed_dict)
+        feed_dict = {
+          cldnn.input_placeholder : batch_inputs,
+          cldnn.lengths_placeholder : batch_lengths,
+          cldnn.output_placeholder : batch_outputs
+          }
+        session_eval = session.run(eval_op, feed_dict = feed_dict)
+        total_eval += np.array(session_eval)
       total_eval /= eval_iterations_count
       print("\nAccuracy = " +str(total_eval * 100) + "%\n")
       input("\nPress to exit ...")
@@ -280,7 +287,7 @@ def use_librispeech_trained_model():
   BATCH_SIZE = 1
   MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
-  TRAINING_ITERATION_COUNT = 250000
+  TRAINING_ITERATION_COUNT = 125000
 
   data = SpeechDataUtils(librispeech_path = r"C:\LibriSpeech")
   train_data = data.train
@@ -291,7 +298,7 @@ def use_librispeech_trained_model():
 
   with tf.Graph().as_default():
     options = init_model_options(max_timesteps, FEATURES_COUNT, dictionary_size, MAX_OUTPUT_SEQUENCE_LENGTH)
-    cldnn = CLDNNModel(input_placeholder, lengths_placeholder, output_placeholder, options)
+    cldnn = CLDNNModel(options)
 
     train_op = cldnn.training
     loss_op = cldnn.loss
@@ -305,12 +312,30 @@ def use_librispeech_trained_model():
     with tf.Session(config = session_config) as session:
 
       print("Initializing variables...")
-      checkpoint_file = '/tmp/custom/CLDNN/logs/model.ckpt'
-      saver.restore(session, checkpoint_file)
+      checkpoint_file = r"C:\tmp\custom\CLDNN\logs"
+      checkpoint = tf.train.get_checkpoint_state(checkpoint_file)
+      saver.restore(session, checkpoint.model_checkpoint_path)
       print("Variables initialized !")
 
+      # EVALUTATION
+      total_eval = np.zeros(MAX_OUTPUT_SEQUENCE_LENGTH)
+      print("Testing model on", eval_iterations_count, "samples")
+      for i in tqdm(range(eval_iterations_count)):
+        batch_inputs, batch_lengths, batch_outputs = eval_data.next_batch(1, one_hot = True)
+        feed_dict = {
+          cldnn.input_placeholder : batch_inputs,
+          cldnn.lengths_placeholder : batch_lengths,
+          cldnn.output_placeholder : batch_outputs
+          }
+        session_eval = session.run(eval_op, feed_dict = feed_dict)
+        total_eval += session_eval.reshape(MAX_OUTPUT_SEQUENCE_LENGTH,)
+      total_eval /= eval_iterations_count
+      print("\nAccuracy = " +str(total_eval * 100) + "%\n")
+      input("\nPress to exit ...")
+      
+
 def init_model_options(max_timesteps : int, features_count : int, dictionary_size : int, max_output_sequence_length : int) -> CLDNNModelOptions:
-  options = CLDNNModelOptions(max_timesteps, features_count, dictionary_size)
+  options = CLDNNModelOptions(max_timesteps, features_count, dictionary_size, max_output_sequence_length)
   options.conv_features_count = 32 #4
   options.dimension_reduction_output_size = 128  #128
   options.fully_connected1_size = 128 #16
@@ -321,7 +346,8 @@ def init_model_options(max_timesteps : int, features_count : int, dictionary_siz
   return options
 
 def main():
-  train_on_librispeech()
+  #train_on_librispeech()
+  use_librispeech_trained_model()
 
 if __name__ == '__main__':
   main()
