@@ -80,6 +80,8 @@ class SpeechDataSet(object):
     # Si l'option OneHot est activée, transforme les tokens en vecteurs one-hot dans les outputs (les phrases)
     if one_hot:
       outputs = SpeechDataSet.token_to_onehot(outputs, batch_size, self.dictionary_size)
+    else :
+      outputs = SpeechDataSet.tokens_for_sparse(outputs, batch_size)
 
     batch = (inputs, input_lengths, outputs, output_lengths)
     return batch
@@ -96,8 +98,19 @@ class SpeechDataSet(object):
         outputs[entry][token][token_class] = 1
     return outputs
 
+  @staticmethod
+  def tokens_for_sparse(tokens, batch_size : int):
+    max_sequence_length = len(tokens[0])
+    outputs = np.zeros((batch_size, max_sequence_length, 2))
+
+    for sample in range(batch_size):
+      for token in range(max_sequence_length):
+        outputs[sample][token][0] = token
+        outputs[sample][token][1] = tokens[sample][token]
+    return outputs
+
 class SpeechDataUtils(object):
-  def __init__(self, librispeech_path = r"D:\tmp\LibriSpeech", bucket_size = 150, eval_batch_files_count = 2, allow_autorewind = True):
+  def __init__(self, librispeech_path = r"C:\tmp\LibriSpeech", bucket_size = 150, eval_batch_files_count = 2, allow_autorewind = True):
     # Chemin vers le dossier Librispeech
     self.librispeech_path = librispeech_path
     # Données contenant l'ordre utilisé lors du preprocessus
