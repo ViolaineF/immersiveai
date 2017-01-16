@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -60,7 +61,9 @@ namespace TTS_consoleApp
             #endregion
 
             PromptBuilder prompt = new PromptBuilder();
-            prompt.AppendText("Hi, I'm");
+            //prompt.StartVoice(new System.Globalization.CultureInfo("en-US"));
+            prompt.AppendText("Hi, I'm"); 
+            synth.SelectVoice("Microsoft Server Speech Text to Speech Voice (en-US, ZiraPro)");
             string m_engineName = synth.Voice.Name + " !";
             prompt.AppendText(m_engineName);
             prompt.AppendText("How are you?");
@@ -90,8 +93,7 @@ namespace TTS_consoleApp
             //synth.SelectVoice("Microsoft Hortense Desktop");
             //synth.Speak(prompt);
 
-            synth.SelectVoice("Microsoft Server Speech Text to Speech Voice (en-US, ZiraPro)");
-
+            
 
             //prompt.AppendSsmlMarkup("<prosody pitch=\"x-high\">");
             //prompt.AppendText("How are you?");
@@ -102,7 +104,7 @@ namespace TTS_consoleApp
             //prompt.AppendSsmlMarkup("</prosody>");
 
 
-            prompt.AppendText("This is a long text. With two sentences! With two sentences.");
+            //prompt.AppendText("This is a long text. With two sentences! With two sentences.");
 
             //prompt.StartStyle(new PromptStyle(PromptVolume.Soft));
             //prompt.StartParagraph();
@@ -116,12 +118,14 @@ namespace TTS_consoleApp
             //prompt.AppendText("Please answer!");
             //prompt.EndStyle();
 
+            MemoryStream audioStream = new MemoryStream();
+            synth.SetOutputToWaveStream(audioStream);
             // Speak a string.
             synth.Speak(prompt);
+            byte[] buffer = audioStream.ToArray();
+            Console.WriteLine(buffer.Length);
+            Console.WriteLine(audioStream.Length);
 
-
-
-            Console.WriteLine();
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }

@@ -103,20 +103,25 @@ class ReinforcementServer(ImmersiveTensorflowServer):
     #6] If not observing : Reduce random action probability (until a minimum)
 
     while self.listening:
-      recv_type, recv_frame, recv_reward = self.get_frame()
+      recv_type, recv_frame, recv_reward, recv_action = self.get_frame()
       self.observing = (recv_type == 0)
       self.listening = (recv_type != 2)
+      if not self.listening:
+        break
 
       self.register_reward(recv_reward)
-      self.create_observation(recv_frame, recv_reward)
+      self.create_observation(recv_frame, recv_reward, recv_action)
 
-      if not self.only_observing:
+      if not self.observing:
         self.train()
 
       self.last_state = recv_frame
-      self.last_action = self.choose_next_action()
+      if self.observing:
+        self.last_action = recv_action
+      else:
+        self.last_action = self.choose_next_action()
 
-      if not self.only_observing:
+      if not self.observing:
         self.update_random_action_probability()
 
       self.send_data(struct.pack('i', self.last_action))
@@ -126,21 +131,6 @@ class ReinforcementServer(ImmersiveTensorflowServer):
       
       if (self.observations_count % 50) == 0:
         gc.collect()
-      #else:
-      #  inputs = recv_data[4:self.model.input_size + 4]
-      #  inputs = np.fromstring(inputs, dtype=np.uint8)
-      #  inputs = inputs.astype(np.float32)
-      #  outputs = struct.unpack('%sf' % self.model.output_size, recv_data[-self.model.output_size * 4:])
-
-      #  feed_dict = {
-      #    self.model.placeholders[0] : inputs,
-      #    self.model.placeholders[1] : outputs
-      #    }
-
-      #  inference = self.session.run(inference_op, feed_dict = feed_dict)
-      #  answer = inference.tolist()[0]
-
-      #  answer = struct.pack('%sf' % self.model.output_size, *answer)
 
   def get_frame(self):
     recv_data, length = self.get_data()
@@ -149,23 +139,21 @@ class ReinforcementServer(ImmersiveTensorflowServer):
     recv_type = recv_data[i : i + 4]
     recv_type = int.from_bytes(recv_type, byteorder = 'little')
     if recv_type == 2:
-      return recv_type, None, None
+      return recv_type, None, None, None
     i += 4 # recv_type size (int => 4 bytes)
 
     recv_frame = recv_data[i : i + self.model.input_size]
     recv_frame = np.fromstring(recv_frame, dtype=np.uint8).astype(float)
     i += self.model.input_size # pixel count size (1 pixel => 1 byte)
 
-    #recv_action = recv_data[i : i + 4]
-    #recv_action = int.from_bytes(recv_action, byteorder = 'little')
-    #i += 4  # recv_action size (int => 4 bytes)
-
     recv_reward = recv_data[i : i + 4]
     recv_reward = struct.unpack('f', recv_reward)[0]
-    # recv_reward size (float => 4 bytes)
+    i += 4 # recv_reward size (float => 4 bytes)
 
-    #return recv_type, recv_frame, recv_action, recv_reward
-    return recv_type, recv_frame, recv_reward
+    recv_action = recv_data[i : i + 4]
+    recv_action = int.from_bytes(recv_action, byteorder = 'little')
+    #i += 4  # recv_action size (int => 4 bytes)
+    return recv_type, recv_frame, recv_reward, recv_action
 
   def register_reward(self, reward : float):
     if reward != 0:
@@ -175,12 +163,12 @@ class ReinforcementServer(ImmersiveTensorflowServer):
         self.rewards.popleft()
       self.rewards.append(reward)
 
-  def create_observation(self, frame, reward):
+  def create_observation(self, frame, reward, action):
     # First frame ever ?
     if self.last_state is None:
       self.last_state = frame
     # Building observation
-    observation = (self.last_state, self.action_to_onehot(self.last_action), reward, frame)
+    observation = (self.last_state, self.action_to_onehot(action), reward, frame)
     observation = np.array(observation)
     # Appending observation, if full then we pop the oldest one to make room for the new one
     if self.observations_count > self.config.max_frame_count:
@@ -201,10 +189,6 @@ class ReinforcementServer(ImmersiveTensorflowServer):
       inference = self.session.run(self.model.inference, feed_dict = feed_dict)[0]
       action = np.argmax(inference)
     return action
-
-  @property
-  def only_observing(self) -> bool:
-    return self.observations_count <= self.config.observation_count_before_training
 
   def train(self):
     mini_batch = random.sample(self.observations, self.config.mini_batch_size)
