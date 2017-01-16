@@ -63,11 +63,13 @@ class CLDNNModel:
 
   @define_scope
   def placeholders(self):
-    self.input_placeholder = tf.placeholder(tf.float32, [None, self.options.max_timesteps, self.options.mfcc_features_count], name="Input__placeholder")
-    self.lengths_placeholder = tf.placeholder(tf.int32, [None], name="Lengths_placeholder")
-    self.output_placeholder = tf.placeholder(tf.int32, [None, self.options.max_output_sequence_length, self.options.dictionary_size], name="True_output_placeholder")
+    self.input_placeholder = tf.placeholder(tf.float32, [None, self.options.max_timesteps, self.options.mfcc_features_count], name="input__placeholder")
+    self.input_lengths_placeholder = tf.placeholder(tf.int32, [None], name="input_lengths_placeholder")
 
-    return (self.input_placeholder, self.lengths_placeholder, self.output_placeholder)
+    self.output_placeholder = tf.placeholder(tf.int32, [None, self.options.max_output_sequence_length, self.options.dictionary_size], name="true_output_placeholder")
+    self.output_lengths_placeholder = tf.placeholder(tf.int32, [None], name="output_lengths_placeholder")
+
+    return (self.input_placeholder, self.input_lengths_placeholder, self.output_placeholder, self.output_lengths_placeholder)
 
   @define_scope
   def inference(self):
@@ -111,7 +113,7 @@ class CLDNNModel:
       biaises = CLDNNModel.bias_variable([flatten_input_size_red])
 
       red_input = tf.matmul(flatten_input, weights) + biaises
-      red_time = tf.cast(tf.ceil(self.lengths_placeholder / self.options.time_reduction_factor), tf.int32)
+      red_time = tf.cast(tf.ceil(self.input_lengths_placeholder / self.options.time_reduction_factor), tf.int32)
 
     # 4th Layer (Concatenation)
     with tf.name_scope("Concatenation"):
@@ -154,13 +156,10 @@ class CLDNNModel:
 
   @define_scope
   def loss(self):
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder))
-    #embedding_map = tf.Variable(tf.truncated_normal([self.dictionary_size, self.lookup_table_size], stddev = 0.1), name = "embedding_map")
-    #seq_embeddings = tf.nn.embedding_lookup(embedding_map, self.output_placeholder)
+    ctc = tf.nn.ctc_loss(self.inference, self.output_placeholder, self.output_lengths_placeholder)
+    #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder))
 
-    #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.inference, seq_embeddings))
-
-    return cross_entropy
+    return ctc
 
   @define_scope
   def training(self):
@@ -247,12 +246,13 @@ def train_on_librispeech():
       # TRAINING
       for i in tqdm(range(TRAINING_ITERATION_COUNT)):
         #batch_inputs, batch_lengths, batch_outputs = data.get_batch(BATCH_SIZE)
-        batch_inputs, batch_lengths, batch_outputs = train_data.next_batch(BATCH_SIZE, one_hot = True)
+        batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = train_data.next_batch(BATCH_SIZE, one_hot = True)
 
         feed_dict = {
           cldnn.input_placeholder : batch_inputs,
-          cldnn.lengths_placeholder : batch_lengths,
-          cldnn.output_placeholder : batch_outputs
+          cldnn.input_lengths_placeholder : batch_input_lengths,
+          cldnn.output_placeholder : batch_outputs,
+          cldnn.output_lengths_placeholder : batch_output_lengths
           }
 
         _, loss_value = session.run([train_op, loss_op], feed_dict = feed_dict)
@@ -321,12 +321,15 @@ def use_librispeech_trained_model():
       total_eval = np.zeros(MAX_OUTPUT_SEQUENCE_LENGTH)
       print("Testing model on", eval_iterations_count, "samples")
       for i in tqdm(range(eval_iterations_count)):
-        batch_inputs, batch_lengths, batch_outputs = eval_data.next_batch(1, one_hot = True)
+        batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = eval_data.next_batch(1, one_hot = True)
+
         feed_dict = {
           cldnn.input_placeholder : batch_inputs,
-          cldnn.lengths_placeholder : batch_lengths,
-          cldnn.output_placeholder : batch_outputs
+          cldnn.input_lengths_placeholder : batch_input_lengths,
+          cldnn.output_placeholder : batch_outputs,
+          cldnn.output_lengths_placeholder : batch_output_lengths
           }
+
         session_eval = session.run(eval_op, feed_dict = feed_dict)
         total_eval += session_eval.reshape(MAX_OUTPUT_SEQUENCE_LENGTH,)
       total_eval /= eval_iterations_count

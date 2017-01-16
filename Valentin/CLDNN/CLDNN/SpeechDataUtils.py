@@ -17,8 +17,9 @@ class SpeechDataSet(object):
     self.current_input_index = 0
 
     self.current_mfcc_batch = None
-    self.current_lengths_batch = None
+    self.current_input_lengths_batch = None
     self.current_tokenized_transcripts_batch = None
+    self.current_output_lengths_batch = None
 
     self.allow_autorewind = allow_autorewind
     self.load_batch()
@@ -26,8 +27,8 @@ class SpeechDataSet(object):
   def load_batch(self):
     selected_file = self.batches_infos[self.current_batch_index]
     mfcc_batch_file_path, mfcc_batch_lengths_file_path, \
-      _, _, \
-      tokenized_transcripts_batch_file_path = selected_file
+      _, \
+      transcripts_lengths_batch_file_path, tokenized_transcripts_batch_file_path = selected_file
 
     if self.current_mfcc_batch is not None :
       self.current_batch_index += 1
@@ -39,15 +40,17 @@ class SpeechDataSet(object):
         return False
 
     self.current_mfcc_batch = np.load(mfcc_batch_file_path)
-    self.current_lengths_batch = np.load(mfcc_batch_lengths_file_path)
+    self.current_input_lengths_batch = np.load(mfcc_batch_lengths_file_path)
     self.current_tokenized_transcripts_batch = np.load(tokenized_transcripts_batch_file_path)
+    self.current_output_lengths_batch = np.load(transcripts_lengths_batch_file_path)
 
     index_shuffle = np.arange(len(self.current_mfcc_batch))
     np.random.shuffle(index_shuffle)
 
     self.current_mfcc_batch = self.current_mfcc_batch[index_shuffle]
-    self.current_lengths_batch = self.current_lengths_batch[index_shuffle]
+    self.current_input_lengths_batch = self.current_input_lengths_batch[index_shuffle]
     self.current_tokenized_transcripts_batch = self.current_tokenized_transcripts_batch[index_shuffle]
+    self.current_output_lengths_batch = self.current_output_lengths_batch[index_shuffle]
 
     return True
 
@@ -55,8 +58,9 @@ class SpeechDataSet(object):
     index_in_batch = self.current_input_index
 
     inputs = self.current_mfcc_batch[index_in_batch : index_in_batch + batch_size]
-    lengths = self.current_lengths_batch[index_in_batch : index_in_batch + batch_size]
+    input_lengths = self.current_input_lengths_batch[index_in_batch : index_in_batch + batch_size]
     outputs = self.current_tokenized_transcripts_batch[index_in_batch : index_in_batch + batch_size]
+    output_lengths = self.current_output_lengths_batch[index_in_batch : index_in_batch + batch_size]
 
     self.current_input_index += batch_size
 
@@ -66,8 +70,9 @@ class SpeechDataSet(object):
       successfully_loaded = self.load_batch()
       if successfully_loaded:
         inputs += self.current_mfcc_batch[:self.current_input_index]
-        lengths += self.current_lengths_batch[:self.current_input_index]
+        input_lengths += self.current_input_lengths_batch[:self.current_input_index]
         outputs += self.current_tokenized_transcripts_batch[:self.current_input_index]
+        output_lengths += self.current_output_lengths_batch[:self.current_input_index]
     elif self.current_input_index == self.batch_file_size:
       self.current_input_index -= self.batch_file_size
       self.load_batch()
@@ -76,7 +81,7 @@ class SpeechDataSet(object):
     if one_hot:
       outputs = SpeechDataSet.token_to_onehot(outputs, batch_size, self.dictionary_size)
 
-    batch = (inputs, lengths, outputs)
+    batch = (inputs, input_lengths, outputs, output_lengths)
     return batch
 
   @staticmethod
