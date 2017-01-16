@@ -1,3 +1,11 @@
 *.suo
 Valentin/CLDNN/.vs/CLDNN/v14/.suo
 *.suo
+Valentin/ImmersiveTensorflowServer/ImmersiveTensorflowServer/checkpoints/checkpoint
+*.MIMIRON
+Valentin/ImmersiveTensorflowServer/ImmersiveTensorflowServer/checkpoints/network-58000.index
+*.data-00000-of-00001
+Valentin/ImmersiveTensorflowServer/ImmersiveTensorflowServer/checkpoints/network-58000.meta
+*.meta
+Valentin/ImmersiveTensorflowServer/ImmersiveTensorflowServer/checkpoints/network-59000.index
+*.index

@@ -34,7 +34,7 @@ class DQNModel(ModelSkeleton):
   @define_scope
   def inference(self):
     k = 256
-    k_2 = 128
+    k_2 = 256
     input_as_4d_tensor = tf.reshape(self.input_placeholder, (-1, self.input_width, self.input_height, self.input_depth)) # 100 480 270 3
 
     with tf.name_scope("conv1"):
@@ -82,5 +82,7 @@ class DQNModel(ModelSkeleton):
 
   @define_scope
   def training(self):
+    tf.summary.scalar('loss', self.loss)
     optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
-    return optimizer.minimize(self.loss)
+    global_step = tf.Variable(0, name='global_step', trainable=False)
+    return optimizer.minimize(self.loss, global_step = global_step)

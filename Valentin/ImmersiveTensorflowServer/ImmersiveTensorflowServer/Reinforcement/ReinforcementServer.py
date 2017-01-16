@@ -6,6 +6,7 @@ import struct
 import math
 import random
 import gc
+import os
 from collections import deque
 
 from ImmersiveTensorflowServer import ImmersiveTensorflowServer
@@ -18,10 +19,14 @@ class Observation():
   pass
 
 class ReinforcementServer(ImmersiveTensorflowServer):
-  def __init__(self, config : ReinforcementServerConfig, model : ModelSkeleton):
+  def __init__(self, config : ReinforcementServerConfig, model : ModelSkeleton, graph : tf.Graph):
     super().__init__()
 
     self.config = config
+
+    self.graph = tf.Graph()
+    self.graph.as_default()
+
     self.model = model
 
     self.last_state = None
@@ -49,10 +54,26 @@ class ReinforcementServer(ImmersiveTensorflowServer):
     self.start_listen_training()
 
   def init_model(self):
+    self.summary = tf.summary.merge_all()
+
     init = tf.global_variables_initializer()
     print("Initializing variables...")
     self.session.run(init)
     print("Variables initialized !")
+
+    self.summary_writer = tf.summary.FileWriter(self.config.checkpoint_path + "/logs", self.session.graph)
+
+    if not os.path.exists(self.config.checkpoint_path):
+      os.mkdir(self.config.checkpoint_path)
+
+    self.saver = tf.train.Saver()
+    checkpoint = tf.train.get_checkpoint_state(self.config.checkpoint_path)
+
+    if checkpoint and checkpoint.model_checkpoint_path:
+      self.saver.restore(self.session, checkpoint.model_checkpoint_path)
+      print("Loaded checkpoints", checkpoint.model_checkpoint_path)
+    else:
+      print("No checkpoint found. Starting from scratch...")
 
   def get_session_config(self):
     session_config = tf.ConfigProto()
@@ -148,7 +169,8 @@ class ReinforcementServer(ImmersiveTensorflowServer):
 
   def register_reward(self, reward : float):
     if reward != 0:
-      self.score += reward
+      if reward >= 1:
+        self.score += 1
       if self.rewards_count > self.config.max_reward_count:
         self.rewards.popleft()
       self.rewards.append(reward)
@@ -217,6 +239,14 @@ class ReinforcementServer(ImmersiveTensorflowServer):
       self.model.target_placeholder : expected_rewards_by_agent
     }
     self.session.run(self.model.training, feed_dict = feed_dict)
+
+    if (self.observations_count % 100) == 0:
+      summary_str = self.session.run(self.summary, feed_dict = feed_dict)
+      self.summary_writer.add_summary(summary_str, self.observations_count)
+      self.summary_writer.flush()
+
+    if (self.observations_count % self.config.save_every_x_steps) == 0:
+      self.saver.save(self.session, self.config.checkpoint_path + r"\network", global_step=self.observations_count)
 
   def update_random_action_probability(self):
     if self.probability_of_random_action > self.config.final_random_action_probability:

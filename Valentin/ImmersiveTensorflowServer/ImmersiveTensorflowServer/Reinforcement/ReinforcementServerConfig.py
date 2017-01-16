@@ -14,6 +14,8 @@ class ReinforcementServerConfig():
     ### Session
     session_config = config_parser["Session"]
     self.gpu_allow_growth                   = session_config["gpu_allow_growth"] == "True"
+    self.checkpoint_path                    = session_config["checkpoint_path"]
+    self.save_every_x_steps                 = int(session_config["save_every_x_steps"])
 
     ### Actions
     actions_config = config_parser["Actions"]

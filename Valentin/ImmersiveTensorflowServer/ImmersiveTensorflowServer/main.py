@@ -1,6 +1,3 @@
-import sys
-print(sys.path)
-
 def start_supervised_server(server_config_path = "ServerConfig.ini", model_config_path = "Supervised/SimpleDNN/ModelConfig.ini"):
   from Supervised.SimpleDNN.SimpleDNNModel import SimpleDNNModel, SimpleDNNConfig
   from Supervised.SupervisedServer import SupervisedServer, SupervisedServerConfig
