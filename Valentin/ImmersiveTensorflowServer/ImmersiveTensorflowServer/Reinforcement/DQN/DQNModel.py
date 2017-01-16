@@ -35,7 +35,8 @@ class DQNModel(ModelSkeleton):
   def inference(self):
     k = 256
     k_2 = 256
-    input_as_4d_tensor = tf.reshape(self.input_placeholder, (-1, self.input_width, self.input_height, self.input_depth)) # 100 480 270 3
+    input_as_4d_tensor = tf.reshape(self.input_placeholder, (-1, self.input_depth, self.input_width, self.input_height)) # 100 480 270 3
+    input_as_4d_tensor = tf.transpose(input_as_4d_tensor, [0, 3, 2, 1])
 
     with tf.name_scope("conv1"):
       convolution_weights_1 = tf.Variable(tf.truncated_normal([8, 8, self.input_depth, 32], stddev=0.01))
