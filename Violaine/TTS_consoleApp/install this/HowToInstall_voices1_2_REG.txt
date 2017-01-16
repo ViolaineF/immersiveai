@@ -1,0 +1,4 @@
+Double click voices1.reg
+accept what ever is said in the prompt box
+
+Same for voices2.reg
