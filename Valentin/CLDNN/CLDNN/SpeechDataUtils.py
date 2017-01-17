@@ -82,6 +82,8 @@ class SpeechDataSet(object):
       outputs = SpeechDataSet.token_to_onehot(outputs, batch_size, self.dictionary_size)
     else :
       outputs = SpeechDataSet.tokens_for_sparse(outputs)
+      if outputs[2] == None:  # Case where sentence is empty (no words, only <EOS> symbols)
+        return self.next_batch(batch_size, False)
 
     batch = (inputs, input_lengths, outputs, output_lengths)
     return batch
@@ -107,10 +109,10 @@ class SpeechDataSet(object):
         if word_id != 77963:
           indices.append([sample_index, word_index])
           values.append(word_id)
-    if len(indices) != 0:
+    try:
       dense_shape = [len(tokens), np.asarray(indices).max(0)[1] + 1]
-    else:
-      dense_shape = [len(tokens), 1]
+    except:
+      dense_shape = None
 
     return (indices, values, dense_shape)
 
