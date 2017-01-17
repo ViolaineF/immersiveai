@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import os
 from tqdm import tqdm
 import functools
 from SpeechDataUtils import SpeechDataUtils
@@ -51,26 +52,29 @@ class CLDNNModel:
   def __init__(self, options : CLDNNModelOptions):
     self.options = options
 
-    self.placeholders
+    self.init_placeholders()
         
-    self.input_size = int(self.input_placeholder.get_shape()[1])
-    self.output_size = int(self.output_placeholder.get_shape()[1])
+    self.input_size = int(self.options.max_timesteps)
+    self.output_size = int(self.options.max_output_sequence_length)
 
     print("Inference : ", self.inference)
     print("Loss : ", self.loss)
     print("Training : ", self.training)
     print("Evaluation : ", self.evaluation)
 
-  @define_scope
-  def placeholders(self):
+  def init_placeholders(self):
     self.input_placeholder = tf.placeholder(tf.float32, [None, self.options.max_timesteps, self.options.mfcc_features_count], name="input__placeholder")
     self.input_lengths_placeholder = tf.placeholder(tf.int32, [None], name="input_lengths_placeholder")
 
-    #self.output_placeholder = tf.placeholder(tf.int32, [None, self.options.max_output_sequence_length, self.options.dictionary_size], name="true_output_placeholder")
-    self.output_placeholder = tf.placeholder(tf.int64, [None, self.options.max_output_sequence_length, 2], name="true_output_placeholder")
+    #self.output_placeholder = tf.sparse_placeholder(tf.int32, shape=[None, self.options.max_output_sequence_length, self.options.dictionary_size])
     self.output_lengths_placeholder = tf.placeholder(tf.int32, [None], name="output_lengths_placeholder")
+    
+    #self.output_placeholder = tf.placeholder(tf.int32, [None, self.options.max_output_sequence_length, self.options.dictionary_size], name="true_output_placeholder")
+    self.output_placeholder_idx = tf.placeholder(tf.int64, name="true_output_placeholder_idx")
+    self.output_placeholder_val = tf.placeholder(tf.int32, name="true_output_placeholder_val")
+    self.output_placeholder_shape = tf.placeholder(tf.int64, name="true_output_placeholder_shape")
 
-    return (self.input_placeholder, self.input_lengths_placeholder, self.output_placeholder, self.output_lengths_placeholder)
+    self.sparse_output = tf.SparseTensor(self.output_placeholder_idx, self.output_placeholder_val, self.output_placeholder_shape)
 
   @define_scope
   def inference(self):
@@ -157,14 +161,12 @@ class CLDNNModel:
 
   @define_scope
   def loss(self):
-    print(self.output_placeholder.get_shape())
-    print(self.output_size)
-    print([self.output_size , self.options.dictionary_size])
-    sparse_output = tf.SparseTensor(self.output_placeholder, np.ones(self.output_size), [None, self.output_size , self.options.dictionary_size])
-    ctc = tf.nn.ctc_loss(self.inference, sparse_output, self.output_lengths_placeholder)
+    inference_time_major = tf.transpose(self.inference, [1, 0, 2])
+    #ctc = tf.nn.ctc_loss(self.inference, self.output_placeholder, self.output_lengths_placeholder, time_major = False)
+    ctc = tf.nn.ctc_loss(inference_time_major, self.sparse_output, self.output_lengths_placeholder, time_major = True)
     #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder))
 
-    return ctc
+    return tf.reduce_mean(ctc)
 
   @define_scope
   def training(self):
@@ -180,7 +182,9 @@ class CLDNNModel:
     
   @define_scope
   def evaluation(self):
-    correct_prediction = tf.equal(tf.argmax(self.inference, 2), tf.argmax(self.output_placeholder, 2))
+    #dense_output = tf.sparse_to_dense(self.output_placeholder.indices, self.output_placeholder.shape, self.output_placeholder.values)
+    dense_output = tf.sparse_to_dense(self.sparse_output.indices, self.sparse_output.shape, self.sparse_output.values)
+    correct_prediction = tf.equal(tf.argmax(self.inference, 2), tf.argmax(dense_output, 2))
     return tf.cast(correct_prediction, tf.float32)
     
   @staticmethod
@@ -212,6 +216,11 @@ class CLDNNModel:
   def bias_variable(shape, init_method='uniform', xavier_params = (None, None)):
     return CLDNNModel.init_variable(shape, init_method, xavier_params)
 
+    #  indices = tf.constant(indices, tf.int64)
+    #values = tf.constant(values, tf.int32)
+    #dense_shape = tf.constant(dense_shape, tf.int64)
+    #
+
 def train_on_librispeech():
 # For testing purpose
   BATCH_SIZE = 1
@@ -219,9 +228,14 @@ def train_on_librispeech():
   FEATURES_COUNT = 40
   TRAINING_ITERATION_COUNT = 125000
 
-  data = SpeechDataUtils(librispeech_path = r"C:\tmp\LibriSpeech")
+  summary_base_path = '/tmp/custom/CLDNN_CTC/logs/'
+  if not os.path.exists(summary_base_path):
+    os.mkdir(summary_base_path)
+
+  data = SpeechDataUtils(librispeech_path = r"E:\tmp\LibriSpeech")
   train_data = data.train
   eval_data = data.eval
+
   eval_iterations_count = eval_data.batch_total_count
   dictionary_size = data.dictionary_size
   max_timesteps = data.bucket_size
@@ -242,7 +256,7 @@ def train_on_librispeech():
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config = session_config) as session:
-      summary_writer = tf.summary.FileWriter('/tmp/custom/CLDNN/logs/', session.graph)
+      summary_writer = tf.summary.FileWriter(summary_base_path, session.graph)
 
       print("Initializing variables...")
       session.run(init)
@@ -253,10 +267,15 @@ def train_on_librispeech():
         #batch_inputs, batch_lengths, batch_outputs = data.get_batch(BATCH_SIZE)
         batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = train_data.next_batch(BATCH_SIZE, one_hot = False)
 
+        batch_outputs_indices, batch_outputs_values, batch_outputs_shape = batch_outputs
+
         feed_dict = {
           cldnn.input_placeholder : batch_inputs,
           cldnn.input_lengths_placeholder : batch_input_lengths,
-          cldnn.output_placeholder : batch_outputs,
+          cldnn.output_placeholder_idx : batch_outputs_indices,
+          cldnn.output_placeholder_val : batch_outputs_values,
+          cldnn.output_placeholder_shape : batch_outputs_shape,
+          #cldnn.output_placeholder : batch_outputs,
           cldnn.output_lengths_placeholder : batch_output_lengths
           }
 
@@ -267,20 +286,27 @@ def train_on_librispeech():
           summary_writer.add_summary(summary_str, i)
           summary_writer.flush()
 
-        if i%1000 == 0 or (i + 1) == TRAINING_ITERATION_COUNT:
-          checkpoint_file = '/tmp/custom/CLDNN_CTC/logs/model.ckpt'
+        if i%5000 == 0 or (i + 1) == TRAINING_ITERATION_COUNT:
+          checkpoint_file = summary_base_path + "model.ckpt"
           print("\nAt step", i, "loss = ", loss_value,'\n')
           saver.save(session, checkpoint_file, global_step = i)
 
       # EVALUTATION
-      total_eval = np.zeros(22)
+      total_eval = np.zeros(MAX_OUTPUT_SEQUENCE_LENGTH)
       print("Testing model on", eval_iterations_count, "samples")
       for i in tqdm(range(eval_iterations_count)):
-        batch_inputs, batch_lengths, batch_outputs = eval_data.next_batch(1, one_hot = False)
+        batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = eval_data.next_batch(1, one_hot = False)
+
+        batch_outputs_indices, batch_outputs_values, batch_outputs_shape = batch_outputs
+
         feed_dict = {
           cldnn.input_placeholder : batch_inputs,
-          cldnn.lengths_placeholder : batch_lengths,
-          cldnn.output_placeholder : batch_outputs
+          cldnn.input_lengths_placeholder : batch_input_lengths,
+          cldnn.output_placeholder_idx : batch_outputs_indices,
+          cldnn.output_placeholder_val : batch_outputs_values,
+          cldnn.output_placeholder_shape : batch_outputs_shape,
+          #cldnn.output_placeholder : batch_outputs,
+          cldnn.output_lengths_placeholder : batch_output_lengths
           }
         session_eval = session.run(eval_op, feed_dict = feed_dict)
         total_eval += np.array(session_eval)
@@ -293,6 +319,8 @@ def use_librispeech_trained_model():
   MAX_OUTPUT_SEQUENCE_LENGTH = 22
   FEATURES_COUNT = 40
   TRAINING_ITERATION_COUNT = 125000
+
+  summary_base_path = '/tmp/custom/CLDNN_CTC/logs/'
 
   data = SpeechDataUtils(librispeech_path = r"C:\tmp\LibriSpeech")
   train_data = data.train
@@ -317,7 +345,7 @@ def use_librispeech_trained_model():
     with tf.Session(config = session_config) as session:
 
       print("Initializing variables...")
-      checkpoint_file = r"C:\tmp\custom\CLDNN_CTC\logs"
+      checkpoint_file = summary_base_path
       checkpoint = tf.train.get_checkpoint_state(checkpoint_file)
       saver.restore(session, checkpoint.model_checkpoint_path)
       print("Variables initialized !")
@@ -328,10 +356,15 @@ def use_librispeech_trained_model():
       for i in tqdm(range(eval_iterations_count)):
         batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = eval_data.next_batch(1, one_hot = False)
 
+        batch_outputs_indices, batch_outputs_values, batch_outputs_shape = batch_outputs
+
         feed_dict = {
           cldnn.input_placeholder : batch_inputs,
           cldnn.input_lengths_placeholder : batch_input_lengths,
-          cldnn.output_placeholder : batch_outputs,
+          cldnn.output_placeholder_idx : batch_outputs_indices,
+          cldnn.output_placeholder_val : batch_outputs_values,
+          cldnn.output_placeholder_shape : batch_outputs_shape,
+          #cldnn.output_placeholder : batch_outputs,
           cldnn.output_lengths_placeholder : batch_output_lengths
           }
 
@@ -346,7 +379,7 @@ def init_model_options(max_timesteps : int, features_count : int, dictionary_siz
   options = CLDNNModelOptions(max_timesteps, features_count, dictionary_size, max_output_sequence_length)
   options.conv_features_count = 32 #4
   options.dimension_reduction_output_size = 128  #128
-  options.fully_connected1_size = 128 #16
+  options.fully_connected1_size = 32 #16
   options.lstm1_hidden_units_count = 512
   options.lstm2_hidden_units_count = 512
   options.max_pooling_size = 4

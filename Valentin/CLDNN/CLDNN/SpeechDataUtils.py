@@ -81,7 +81,7 @@ class SpeechDataSet(object):
     if one_hot:
       outputs = SpeechDataSet.token_to_onehot(outputs, batch_size, self.dictionary_size)
     else :
-      outputs = SpeechDataSet.tokens_for_sparse(outputs, batch_size)
+      outputs = SpeechDataSet.tokens_for_sparse(outputs)
 
     batch = (inputs, input_lengths, outputs, output_lengths)
     return batch
@@ -99,15 +99,20 @@ class SpeechDataSet(object):
     return outputs
 
   @staticmethod
-  def tokens_for_sparse(tokens, batch_size : int):
-    max_sequence_length = len(tokens[0])
-    outputs = np.zeros((batch_size, max_sequence_length, 2))
+  def tokens_for_sparse(tokens):
+    indices = []
+    values = []
+    for sample_index, sample in enumerate(tokens):
+      for word_index, word_id in enumerate(sample):
+        if word_id != 77963:
+          indices.append([sample_index, word_index])
+          values.append(word_id)
+    if len(indices) != 0:
+      dense_shape = [len(tokens), np.asarray(indices).max(0)[1] + 1]
+    else:
+      dense_shape = [len(tokens), 1]
 
-    for sample in range(batch_size):
-      for token in range(max_sequence_length):
-        outputs[sample][token][0] = token
-        outputs[sample][token][1] = tokens[sample][token]
-    return outputs
+    return (indices, values, dense_shape)
 
 class SpeechDataUtils(object):
   def __init__(self, librispeech_path = r"C:\tmp\LibriSpeech", bucket_size = 150, eval_batch_files_count = 2, allow_autorewind = True):
@@ -248,6 +253,7 @@ def get_words_dictionary(librispeech_path : str):
     if word.endswith('\n'):
       word = word[:-1]
     dictionary[word] = int(id)
+  dictionary["<EOS>"] = int(len(dictionary))
 
   dictionary_file.close()
 
