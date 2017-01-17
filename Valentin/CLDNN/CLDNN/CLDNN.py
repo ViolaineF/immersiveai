@@ -252,14 +252,23 @@ def train_on_librispeech():
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
 
+    
+
     session_config = tf.ConfigProto()
     session_config.gpu_options.allow_growth = True
 
     with tf.Session(config = session_config) as session:
       summary_writer = tf.summary.FileWriter(summary_base_path, session.graph)
 
+      checkpoint = tf.train.get_checkpoint_state(summary_base_path)
+
       print("Initializing variables...")
-      session.run(init)
+      if checkpoint and checkpoint.model_checkpoint_path:
+        print("Loading checkpoints from", checkpoint.model_checkpoint_path)
+        saver.restore(session, checkpoint.model_checkpoint_path)
+      else:
+        print("No checkpoint found. Starting from scratch...")
+        session.run(init)
       print("Variables initialized !")
 
       # TRAINING
@@ -379,7 +388,7 @@ def init_model_options(max_timesteps : int, features_count : int, dictionary_siz
   options = CLDNNModelOptions(max_timesteps, features_count, dictionary_size, max_output_sequence_length)
   options.conv_features_count = 32 #4
   options.dimension_reduction_output_size = 128  #128
-  options.fully_connected1_size = 32 #16
+  options.fully_connected1_size = 128 #16
   options.lstm1_hidden_units_count = 512
   options.lstm2_hidden_units_count = 512
   options.max_pooling_size = 4
