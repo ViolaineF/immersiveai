@@ -1,9 +1,12 @@
 import os
 from tqdm import tqdm
 import tensorflow as tf
+import numpy as np
+import math
 
 from CLDNNModel import CLDNNModel, CLDNNConfig
 from SpeechDataUtils import SpeechDataUtils, SpeechDataSet
+import dictionary_utils
 
 class CLDNN():
   def __init__(self):
@@ -39,7 +42,6 @@ class CLDNN():
     self.eval_data = self.data.eval
 
     self.dictionary_size = self.data.dictionary_size
-    self.eval_iterations_count = self.eval_data.batch_total_count
 
   def _init_graph(self):
     self.graph = tf.Graph()
@@ -80,17 +82,20 @@ class CLDNN():
 
   def train(self, training_iteration_count : int, batch_size : int):
     for i in tqdm(range(training_iteration_count)):
-      batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = self.train_data.next_batch(batch_size, one_hot = False)
+      learning_rate = max(1e-5, self.cldnn_model.config.learning_rate / math.log(math.e * (i + 1)))
+      batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = self.train_data.next_batch(batch_size, one_hot = True)
 
-      #print(batch_output_lengths)
-      #print(batch_outputs)
-      #input()
+      #tmp = []
+      #for sample_output in batch_outputs:
+      #  tmp.append(sample_output[:self.max_output_sequence_length])
+      #batch_outputs = tmp
 
       feed_dict = {
           self.cldnn_model.input_placeholder : batch_inputs,
           self.cldnn_model.input_lengths_placeholder : batch_input_lengths,
           self.cldnn_model.output_placeholder : batch_outputs,
-          self.cldnn_model.output_lengths_placeholder : batch_output_lengths
+          self.cldnn_model.output_lengths_placeholder : batch_output_lengths,
+          self.cldnn_model.learning_rate_placeholder : learning_rate
           }
 
       _, loss_value = self.session.run([self.train_op, self.loss_op], feed_dict = feed_dict)
@@ -101,16 +106,94 @@ class CLDNN():
         self.summary_writer.flush()
 
       if (i%self.save_every_x_steps == 0) or ((i + 1) == training_iteration_count):
-        checkpoint_file = self.checkpoints_path + "model.ckpt"
-        print("\nAt step", i, "loss = ", loss_value,'\n')
+        checkpoint_file = self.checkpoints_path + "\model.ckpt"
+        print("\nAt step", i, "loss = ", loss_value,"\tLearning rate :", learning_rate, '\n')
         self.saver.save(self.session, checkpoint_file, global_step = i)
 
-  def evaluate(self, evaluation_iteration_count : int, batch_size : int):
-    pass
+
+    batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = self.train_data.next_batch(batch_size, one_hot = True)
+
+    #tmp = []
+    #for sample_output in batch_outputs:
+    #  tmp.append(sample_output[:self.max_output_sequence_length])
+    #batch_outputs = tmp
+
+    feed_dict = {
+        self.cldnn_model.input_placeholder : batch_inputs,
+        self.cldnn_model.input_lengths_placeholder : batch_input_lengths,
+        }
+
+    result = self.session.run(self.inference_op, feed_dict = feed_dict)
+    result = np.argmax(result[0], axis=1)
+    target = np.argmax(batch_outputs[0], axis=1)
+    print("Result :\n", result)
+    print("\nTarget:\n", target)
+
+    result_words = ""
+    for idx in result:
+      word = self.data.reverse_dictionary[idx]
+      if word != "<EOS>":
+        result_words += word + ' '
+
+    target_words = ""
+    for idx in target:
+      word = self.data.reverse_dictionary[idx]
+      if word != "<EOS>":
+        target_words += word + ' '
+
+    print("\n\nResult words :\n", result_words)
+    print("\nTarget words:\n", target_words)
+
+  def evaluate(self, evaluation_iteration_count : int):
+    total_eval = np.zeros(self.max_output_sequence_length)
+    print("Testing model on", evaluation_iteration_count, "samples")
+    for i in tqdm(range(evaluation_iteration_count)):
+      batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = self.eval_data.next_batch(1, one_hot = True)
+
+      feed_dict = {
+          self.cldnn_model.input_placeholder : batch_inputs,
+          self.cldnn_model.input_lengths_placeholder : batch_input_lengths,
+          self.cldnn_model.output_placeholder : batch_outputs,
+          self.cldnn_model.output_lengths_placeholder : batch_output_lengths
+          }
+
+      session_eval = self.session.run(self.eval_op, feed_dict = feed_dict)
+      total_eval += session_eval.reshape(self.max_output_sequence_length,)
+    total_eval /= evaluation_iteration_count
+    print("\nAccuracy = " +str(total_eval * 100) + "%\n")
+
+    batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = self.eval_data.next_batch(1, one_hot = True)
+
+    feed_dict = {
+        self.cldnn_model.input_placeholder : batch_inputs,
+        self.cldnn_model.input_lengths_placeholder : batch_input_lengths,
+        }
+
+    result = self.session.run(self.inference_op, feed_dict = feed_dict)
+    result = np.argmax(result[0], axis=1)
+    target = np.argmax(batch_outputs[0], axis=1)
+    print("Result :\n", result)
+    print("\nTarget:\n", target)
+
+    result_words = ""
+    for idx in result:
+      word = self.data.reverse_dictionary[idx]
+      if word != "<EOS>":
+        result_words += word + ' '
+
+    target_words = ""
+    for idx in target:
+      word = self.data.reverse_dictionary[idx]
+      if word != "<EOS>":
+        target_words += word + ' '
+
+    print("\n\nResult words :\n", result_words)
+    print("\nTarget words:\n", target_words)
 
 def main():
   cldnn = CLDNN()
-  cldnn.train(12500, 1)
+  cldnn.train(10, 1)
+  #cldnn.evaluate(100) # not working :(
 
 if __name__ == '__main__':
   main()

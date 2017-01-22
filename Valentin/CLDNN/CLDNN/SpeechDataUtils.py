@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from tqdm import tqdm
+from dictionary_utils import get_words_dictionary
 
 import time
 
@@ -68,11 +69,11 @@ class SpeechDataSet(object):
     if self.current_input_index > self.batch_file_size:
       self.current_input_index -= self.batch_file_size
       successfully_loaded = self.load_batch()
-      if successfully_loaded:
-        inputs += self.current_mfcc_batch[:self.current_input_index]
-        input_lengths += self.current_input_lengths_batch[:self.current_input_index]
-        outputs += self.current_tokenized_transcripts_batch[:self.current_input_index]
-        output_lengths += self.current_output_lengths_batch[:self.current_input_index]
+      #if successfully_loaded:
+      #  inputs += self.current_mfcc_batch[:self.current_input_index]
+      #  input_lengths += self.current_input_lengths_batch[:self.current_input_index]
+      #  outputs += self.current_tokenized_transcripts_batch[:self.current_input_index]
+      #  output_lengths += self.current_output_lengths_batch[:self.current_input_index]
     elif self.current_input_index == self.batch_file_size:
       self.current_input_index -= self.batch_file_size
       self.load_batch()
@@ -81,7 +82,10 @@ class SpeechDataSet(object):
     if one_hot:
       outputs = SpeechDataSet.token_to_onehot(outputs, batch_size, self.dictionary_size)
     else :
-      outputs = SpeechDataSet.tokens_for_sparse(outputs)
+      try:
+        outputs = SpeechDataSet.tokens_for_sparse(outputs)
+      except:
+        return self.next_batch(batch_size, one_hot)
 
     batch = (inputs, input_lengths, outputs, output_lengths)
     return batch
@@ -100,12 +104,13 @@ class SpeechDataSet(object):
 
   @staticmethod
   def tokens_for_sparse(sequences):
+    eos_value = 9632
     tmp = []
     for seq_idx in range(len(sequences)):
       seq = sequences[seq_idx]
       for i in range(len(seq)):
         end_idx = i
-        if seq[i] == 77963:
+        if seq[i] == eos_value:
           break
       tmp.append(seq[:end_idx])
       
@@ -137,7 +142,7 @@ class SpeechDataUtils(object):
     self.bucket_size = bucket_size
 
     # Dictionnaire des mots trouvés lors du preprocess
-    self.dictionary = get_words_dictionary(librispeech_path)
+    self.dictionary, self.reverse_dictionary = get_words_dictionary(librispeech_path, reduced_dictionary = True)
     # Taille du dictionnaire
     self.dictionary_size = len(self.dictionary)
     # Informations sur les paquets de données ayant été préprocess
@@ -176,7 +181,9 @@ def get_preprocess_order(librispeech_path : str):
   preprocess_order = preprocess_order_file.readlines()
   for i in range(len(preprocess_order)):
     # Removing '\n' at the end with :   [:-1]
-    tmp = preprocess_order[i][:-1]
+    tmp = preprocess_order[i]
+    if tmp.endswith('\n'):
+      tmp = tmp[:-1]
     # and splitting into [index, npy_file_path, sentence_file_path] with :   split(',')
     preprocess_order[i] = tmp.split(',')
 
@@ -248,26 +255,6 @@ def get_batches_info(librispeech_path : str):
 
 
   #str(mfcc_padded_length) + ' ' + batch_file_path + ' ' + mfcc_batch_lengths_file_path + ' ' + transcripts_batch_file_path + ' ' + transcripts_batch_lengths_file_path + ' ' + tokenized_transcripts_batch_file_path
-
-def get_words_dictionary(librispeech_path : str):
-  # Retrieve existing file
-  dictionary_file_path = os.path.join(librispeech_path, "dictionary.txt")
-  dictionary = dict()
-
-  dictionary_file = open(dictionary_file_path, 'r')
-  lines = dictionary_file.readlines()
-
-  for i in range(len(lines)):
-    line = lines[i]
-    id, word = line.split(' ')
-    if word.endswith('\n'):
-      word = word[:-1]
-    dictionary[word] = int(id)
-  dictionary["<EOS>"] = int(len(dictionary))
-
-  dictionary_file.close()
-
-  return dictionary
 
 def get_transcript_from_file_and_index(transcript_file_path : str, sentence_index : int):
     transcript_file = open(transcript_file_path, 'r')
@@ -363,7 +350,7 @@ def tokenize_transcript(dictionary : dict, transcript : str, split_char = ' '):
 def create_batches_of_sequences(librispeech_path : str, batch_size = 5000, buckets = ((150, 22), (250, 40), (500, 60), (1000, 80), (1500, 100), (2000, 120))):
   preprocess_order = get_preprocess_order(librispeech_path)
   mfcc_lengths = get_mfcc_lengths(librispeech_path)
-  word_dictionary = get_words_dictionary(librispeech_path)
+  word_dictionary, _ = get_words_dictionary(librispeech_path)
 
   sentence_count = len(mfcc_lengths)
   i = 0

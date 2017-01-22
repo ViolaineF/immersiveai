@@ -14,6 +14,7 @@ class CLDNNConfig():
 
     training_config = config_parser["Training"]
     self.learning_rate = float(training_config["learning_rate"])
+    self.use_ctc_loss = training_config["use_ctc_loss"] == "True"
 
     cnn_config = config_parser["CNN"]
     self.conv_kernel_size = int(cnn_config["conv_kernel_size"])
