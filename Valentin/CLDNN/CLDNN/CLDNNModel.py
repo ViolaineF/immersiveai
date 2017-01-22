@@ -5,6 +5,7 @@ from tqdm import tqdm
 import functools
 from SpeechDataUtils import SpeechDataUtils
 from SpeechDataUtils import SpeechDataSet
+from CLDNNConfig import CLDNNConfig
 
 def define_scope(function):
   attribute = '_cache_' + function.__name__
@@ -19,43 +20,43 @@ def define_scope(function):
 
   return decorator
 
-class CLDNNModelOptions:
-  def __init__(self, max_timesteps : int, mfcc_features_count : int, dictionary_size : int, max_output_sequence_length : int,
-                learning_rate = 1e-4,
-                conv_kernel_size = 5, conv_features_count = 32,
-                max_pooling_size = 2,
-                dimension_reduction_output_size = 256, time_reduction_factor = 1,
-                lstm1_hidden_units_count = 512, lstm2_hidden_units_count = 512,
-                fully_connected1_size = 256
-               ):
-    self.max_timesteps = max_timesteps
-    self.mfcc_features_count = mfcc_features_count
-    self.dictionary_size = dictionary_size
-    self.max_output_sequence_length = max_output_sequence_length
+#class CLDNNModelOptions:
+#  def __init__(self, max_timesteps : int, mfcc_features_count : int, dictionary_size : int, max_output_sequence_length : int,
+#                learning_rate = 1e-4,
+#                conv_kernel_size = 5, conv_features_count = 32,
+#                max_pooling_size = 2,
+#                dimension_reduction_output_size = 256, time_reduction_factor = 1,
+#                lstm1_hidden_units_count = 512, lstm2_hidden_units_count = 512,
+#                fully_connected1_size = 256
+#               ):
+#    self.max_timesteps = max_timesteps
+#    self.mfcc_features_count = mfcc_features_count
+#    self.dictionary_size = dictionary_size
+#    self.max_output_sequence_length = max_output_sequence_length
 
-    self.learning_rate = learning_rate
+#    self.learning_rate = learning_rate
 
-    self.conv_kernel_size = conv_kernel_size
-    self.conv_features_count = conv_features_count
+#    self.conv_kernel_size = conv_kernel_size
+#    self.conv_features_count = conv_features_count
 
-    self.max_pooling_size = max_pooling_size
-    self.dimension_reduction_output_size = dimension_reduction_output_size
-    self.time_reduction_factor = time_reduction_factor
+#    self.max_pooling_size = max_pooling_size
+#    self.dimension_reduction_output_size = dimension_reduction_output_size
+#    self.time_reduction_factor = time_reduction_factor
 
-    self.lstm1_hidden_units_count = lstm1_hidden_units_count
-    self.lstm2_hidden_units_count = lstm2_hidden_units_count
+#    self.lstm1_hidden_units_count = lstm1_hidden_units_count
+#    self.lstm2_hidden_units_count = lstm2_hidden_units_count
 
-    self.fully_connected1_size = fully_connected1_size
+#    self.fully_connected1_size = fully_connected1_size
 
 
 class CLDNNModel:
-  def __init__(self, options : CLDNNModelOptions):
-    self.options = options
+  def __init__(self, config : CLDNNConfig):
+    self.config = config
 
     self.init_placeholders()
         
-    self.input_size = int(self.options.max_timesteps)
-    self.output_size = int(self.options.max_output_sequence_length)
+    self.input_size = int(self.config.max_timesteps)
+    self.output_size = int(self.config.max_output_length)
 
     print("Inference : ", self.inference)
     print("Loss : ", self.loss)
@@ -63,46 +64,39 @@ class CLDNNModel:
     print("Evaluation : ", self.evaluation)
 
   def init_placeholders(self):
-    self.input_placeholder = tf.placeholder(tf.float32, [None, self.options.max_timesteps, self.options.mfcc_features_count], name="input__placeholder")
+    self.input_placeholder = tf.placeholder(tf.float32, [None, self.config.max_timesteps, self.config.mfcc_features_count], name="input__placeholder")
     self.input_lengths_placeholder = tf.placeholder(tf.int32, [None], name="input_lengths_placeholder")
 
-    #self.output_placeholder = tf.sparse_placeholder(tf.int32, shape=[None, self.options.max_output_sequence_length, self.options.dictionary_size])
+    self.output_placeholder = tf.sparse_placeholder(tf.int32, shape=[None, self.config.max_output_length, self.config.dictionary_size], name="true_output_placeholder")
     self.output_lengths_placeholder = tf.placeholder(tf.int32, [None], name="output_lengths_placeholder")
-    
-    #self.output_placeholder = tf.placeholder(tf.int32, [None, self.options.max_output_sequence_length, self.options.dictionary_size], name="true_output_placeholder")
-    self.output_placeholder_idx = tf.placeholder(tf.int64, name="true_output_placeholder_idx")
-    self.output_placeholder_val = tf.placeholder(tf.int32, name="true_output_placeholder_val")
-    self.output_placeholder_shape = tf.placeholder(tf.int64, name="true_output_placeholder_shape")
-
-    self.sparse_output = tf.SparseTensor(self.output_placeholder_idx, self.output_placeholder_val, self.output_placeholder_shape)
 
   @define_scope
   def inference(self):
-    input_as_2d_tensor = tf.reshape(self.input_placeholder, [-1, self.options.max_timesteps, self.options.mfcc_features_count, 1])
+    input_as_2d_tensor = tf.reshape(self.input_placeholder, [-1, self.config.max_timesteps, self.config.mfcc_features_count, 1])
 
     # 1st Layer (Convolution)
     ## Weights & Bias
     with tf.name_scope("Convolution"):
-      weights_conv_layer = CLDNNModel.weight_variable([self.options.conv_kernel_size, self.options.conv_kernel_size, 1, self.options.conv_features_count])
-      bias_conv_layer = CLDNNModel.bias_variable([self.options.conv_features_count])
+      weights_conv_layer = CLDNNModel.weight_variable([self.config.conv_kernel_size, self.config.conv_kernel_size, 1, self.config.conv_features_count])
+      bias_conv_layer = CLDNNModel.bias_variable([self.config.conv_features_count])
       ## Result
       conv_layer = CLDNNModel.conv2d(input_as_2d_tensor, weights_conv_layer) + bias_conv_layer
       relu_conv_layer = tf.nn.relu(conv_layer)
 
     # 2nd Layer (Max Pooling)
     with tf.name_scope("Max_pooling"):
-      max_pool_layer = CLDNNModel.max_pool_1xN(relu_conv_layer, self.options.max_pooling_size)
+      max_pool_layer = CLDNNModel.max_pool_1xN(relu_conv_layer, self.config.max_pooling_size)
 
     # 3rd Layer (Dimension reduction)
     ## Flattening (from 2D to 1D)
     with tf.name_scope("Dim_reduction"):
-      convoluted_size = int(self.options.max_timesteps) * int(self.options.mfcc_features_count / self.options.max_pooling_size)
-      flatten_size = convoluted_size * self.options.conv_features_count
-      #flatten_size = int(convoluted_size * self.conv_features_count / self.options.max_timesteps)
+      convoluted_size = int(self.config.max_timesteps) * int(self.config.mfcc_features_count / self.config.max_pooling_size)
+      flatten_size = convoluted_size * self.config.conv_features_count
+      #flatten_size = int(convoluted_size * self.conv_features_count / self.config.max_timesteps)
       max_pool_layer_flatten = tf.reshape(max_pool_layer, [-1, flatten_size], name="Flatten_maxpool")
       ## Weights and Bias
-      time_red_size = int(self.options.max_timesteps / self.options.time_reduction_factor)
-      dim_red_size = time_red_size * self.options.dimension_reduction_output_size
+      time_red_size = int(self.config.max_timesteps / self.config.time_reduction_factor)
+      dim_red_size = time_red_size * self.config.dimension_reduction_output_size
       weights_dim_red_layer = CLDNNModel.weight_variable([flatten_size, dim_red_size])
       bias_dim_red_layer = CLDNNModel.bias_variable([dim_red_size])
       ## Result
@@ -110,31 +104,31 @@ class CLDNNModel:
 
     # Input reduction (for memory issues :( )
     with tf.name_scope("Input_reduction"):
-      flatten_input_size = self.options.max_timesteps * self.options.mfcc_features_count
-      flatten_input_size_red = int(flatten_input_size / self.options.time_reduction_factor)
+      flatten_input_size = self.config.max_timesteps * self.config.mfcc_features_count
+      flatten_input_size_red = int(flatten_input_size / self.config.time_reduction_factor)
       flatten_input = tf.reshape(self.input_placeholder, [-1, flatten_input_size], name="flatten_input")
       
       weights = CLDNNModel.weight_variable([flatten_input_size, flatten_input_size_red])
       biaises = CLDNNModel.bias_variable([flatten_input_size_red])
 
       red_input = tf.matmul(flatten_input, weights) + biaises
-      red_time = tf.cast(tf.ceil(self.input_lengths_placeholder / self.options.time_reduction_factor), tf.int32)
+      red_time = tf.cast(tf.ceil(self.input_lengths_placeholder / self.config.time_reduction_factor), tf.int32)
 
     # 4th Layer (Concatenation)
     with tf.name_scope("Concatenation"):
       concatenation_layer = tf.concat(1, [dim_red_layer, red_input])
-      concatenation_layer_reshaped = tf.reshape(concatenation_layer, (-1, time_red_size, self.options.dimension_reduction_output_size + self.options.mfcc_features_count), name="reshape_timesteps_concat")
+      concatenation_layer_reshaped = tf.reshape(concatenation_layer, (-1, time_red_size, self.config.dimension_reduction_output_size + self.config.mfcc_features_count), name="reshape_timesteps_concat")
 
     # 5th Layer (LSTM 1)
     with tf.name_scope("LSTM1"):
       with tf.variable_scope("LSTMCell1"):
-        lstm_cell = tf.nn.rnn_cell.LSTMCell(self.options.lstm1_hidden_units_count)
+        lstm_cell = tf.nn.rnn_cell.LSTMCell(self.config.lstm1_hidden_units_count)
         lstm1_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, concatenation_layer_reshaped, dtype=tf.float32, sequence_length = red_time)
 
     # 6th Layer (LSTM 2)
     with tf.name_scope("LSTM2"):
       with tf.variable_scope("LSTMCell2"):
-        lstm_cell = tf.nn.rnn_cell.LSTMCell(self.options.lstm2_hidden_units_count)
+        lstm_cell = tf.nn.rnn_cell.LSTMCell(self.config.lstm2_hidden_units_count)
         lstm2_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, lstm1_output, dtype=tf.float32)
 
     lstm2_output_shape = lstm2_output.get_shape()
@@ -143,19 +137,19 @@ class CLDNNModel:
 
     # 7th Layer (Fully connected 1)
     with tf.name_scope("Fully_connected1"):
-      weights = CLDNNModel.weight_variable([lstm2_output_shape[1], self.options.fully_connected1_size])
-      biases = CLDNNModel.bias_variable([self.options.fully_connected1_size])
+      weights = CLDNNModel.weight_variable([lstm2_output_shape[1], self.config.fully_connected1_size])
+      biases = CLDNNModel.bias_variable([self.config.fully_connected1_size])
 
       fully_connected_layer1 = tf.matmul(lstm2_output_reshaped, weights) + biases
 
     # 7th Layer (Fully connected 2)
     with tf.name_scope("Fully_connected2"):
-      weights = CLDNNModel.weight_variable([self.options.fully_connected1_size, self.output_size * self.options.dictionary_size])
-      biases = CLDNNModel.bias_variable([self.output_size * self.options.dictionary_size])
+      weights = CLDNNModel.weight_variable([self.config.fully_connected1_size, self.output_size * self.config.dictionary_size])
+      biases = CLDNNModel.bias_variable([self.output_size * self.config.dictionary_size])
 
       fully_connected_layer2 = tf.matmul(fully_connected_layer1, weights) + biases
 
-    logits = tf.reshape(fully_connected_layer2, [-1, self.output_size , self.options.dictionary_size])
+    logits = tf.reshape(fully_connected_layer2, [-1, self.output_size , self.config.dictionary_size])
         
     return logits # Should be the 7th layer's ouput
 
@@ -163,7 +157,7 @@ class CLDNNModel:
   def loss(self):
     inference_time_major = tf.transpose(self.inference, [1, 0, 2])
     #ctc = tf.nn.ctc_loss(self.inference, self.output_placeholder, self.output_lengths_placeholder, time_major = False)
-    ctc = tf.nn.ctc_loss(inference_time_major, self.sparse_output, self.output_lengths_placeholder, time_major = True)
+    ctc = tf.nn.ctc_loss(inference_time_major, self.output_placeholder, self.output_lengths_placeholder, time_major = True)
     #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder))
 
     return tf.reduce_mean(ctc)
@@ -172,7 +166,7 @@ class CLDNNModel:
   def training(self):
     tf.summary.scalar('loss', self.loss)
 
-    optimizer = tf.train.GradientDescentOptimizer(self.options.learning_rate)
+    optimizer = tf.train.GradientDescentOptimizer(self.config.learning_rate)
 
     global_step = tf.Variable(0, name='global_step', trainable=False)
 
@@ -183,7 +177,7 @@ class CLDNNModel:
   @define_scope
   def evaluation(self):
     #dense_output = tf.sparse_to_dense(self.output_placeholder.indices, self.output_placeholder.shape, self.output_placeholder.values)
-    dense_output = tf.sparse_to_dense(self.sparse_output.indices, self.sparse_output.shape, self.sparse_output.values)
+    dense_output = tf.sparse_to_dense(self.output_placeholder.indices, self.output_placeholder.shape, self.output_placeholder.values)
     correct_prediction = tf.equal(tf.argmax(self.inference, 2), tf.argmax(dense_output, 2))
     return tf.cast(correct_prediction, tf.float32)
     
@@ -375,16 +369,16 @@ def use_librispeech_trained_model():
       input("\nPress to exit ...")
       
 
-def init_model_options(max_timesteps : int, features_count : int, dictionary_size : int, max_output_sequence_length : int) -> CLDNNModelOptions:
-  options = CLDNNModelOptions(max_timesteps, features_count, dictionary_size, max_output_sequence_length)
-  options.conv_features_count = 32 #4
-  options.dimension_reduction_output_size = 128  #128
-  options.fully_connected1_size = 32 #16
-  options.lstm1_hidden_units_count = 512
-  options.lstm2_hidden_units_count = 512
-  options.max_pooling_size = 4
-  options.time_reduction_factor = 10
-  return options
+#def init_model_options(max_timesteps : int, features_count : int, dictionary_size : int, max_output_sequence_length : int) -> CLDNNModelOptions:
+#  options = CLDNNModelOptions(max_timesteps, features_count, dictionary_size, max_output_sequence_length)
+#  options.conv_features_count = 32 #4
+#  options.dimension_reduction_output_size = 128  #128
+#  options.fully_connected1_size = 32 #16
+#  options.lstm1_hidden_units_count = 512
+#  options.lstm2_hidden_units_count = 512
+#  options.max_pooling_size = 4
+#  options.time_reduction_factor = 10
+#  return options
 
 def main():
   train_on_librispeech()

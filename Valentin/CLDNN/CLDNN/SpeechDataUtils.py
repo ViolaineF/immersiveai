@@ -99,20 +99,30 @@ class SpeechDataSet(object):
     return outputs
 
   @staticmethod
-  def tokens_for_sparse(tokens):
+  def tokens_for_sparse(sequences):
+    tmp = []
+    for seq_idx in range(len(sequences)):
+      seq = sequences[seq_idx]
+      for i in range(len(seq)):
+        end_idx = i
+        if seq[i] == 77963:
+          break
+      tmp.append(seq[:end_idx])
+      
+    sequences = tmp
+
     indices = []
     values = []
-    for sample_index, sample in enumerate(tokens):
-      for word_index, word_id in enumerate(sample):
-        if word_id != 77963:
-          indices.append([sample_index, word_index])
-          values.append(word_id)
-    if len(indices) != 0:
-      dense_shape = [len(tokens), np.asarray(indices).max(0)[1] + 1]
-    else:
-      dense_shape = [len(tokens), 1]
 
-    return (indices, values, dense_shape)
+    for n, seq in enumerate(sequences):
+        indices.extend(zip([n]*len(seq), range(len(seq))))
+        values.extend(seq)
+
+    indices = np.asarray(indices, dtype=np.int64)
+    values = np.asarray(values, dtype=np.int32)
+    shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1]+1], dtype=np.int64)
+
+    return indices, values, shape
 
 class SpeechDataUtils(object):
   def __init__(self, librispeech_path = r"C:\tmp\LibriSpeech", bucket_size = 150, eval_batch_files_count = 2, allow_autorewind = True):
