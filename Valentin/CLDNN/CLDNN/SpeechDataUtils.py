@@ -229,6 +229,7 @@ def get_batches_info(librispeech_path : str):
   batches_info_file = open(os.path.join(librispeech_path, "batches_infos.txt"), 'r')
   batches_info_astext = batches_info_file.readlines()
   batches_count = len(batches_info_astext)
+  batch_folder = os.path.join(librispeech_path, "batches")
 
   batches_info = dict()
   for i in range(batches_count):
@@ -244,6 +245,7 @@ def get_batches_info(librispeech_path : str):
     for j in range(len(splitted_infos)):
       if splitted_infos[j].endswith('\n'):
         splitted_infos[j] = splitted_infos[j][:-1]
+      splitted_infos[j] = os.path.join(batch_folder, splitted_infos[j])
 
     if mfcc_padded_length not in batches_info:
       batches_info[mfcc_padded_length] = [splitted_infos]

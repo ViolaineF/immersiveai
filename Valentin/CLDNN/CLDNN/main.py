@@ -9,7 +9,9 @@ from SpeechDataUtils import SpeechDataUtils, SpeechDataSet
 import dictionary_utils
 
 class CLDNN():
-  def __init__(self):
+  def __init__(self, librispeech_path : str, summary_base_path : str):
+    self.librispeech_path = librispeech_path
+    self.summary_base_path = summary_base_path
     self._init_config()
     self._init_data()
     self._init_graph()
@@ -17,13 +19,10 @@ class CLDNN():
 
   def _init_config(self):
     self.features_count = 40
-    self.max_input_sequence_length = 150
-    self.max_output_sequence_length = 22
-
-    self.librispeech_path = r"E:\tmp\LibriSpeech"
+    self.max_input_sequence_length = 250
+    self.max_output_sequence_length = 40
 
     self.model_config_path = "ModelConfig.ini"
-    self.summary_base_path = r"E:\tmp\custom\CLDNN_CTC"
     self.summary_logs_path = self.summary_base_path + r"\logs"
     self.checkpoints_path = self.summary_base_path + r"\checkpoints"
     self.log_every_x_steps = 100
@@ -191,9 +190,10 @@ class CLDNN():
     print("\nTarget words:\n", target_words)
 
 def main():
-  cldnn = CLDNN()
-  cldnn.train(10, 1)
-  #cldnn.evaluate(100) # not working :(
+  cldnn = CLDNN(r"C:\Librispeech", r"C:\tmp\custom\CLDNN_CTC")
+  cldnn.train(0, 1)
+  #cldnn.evaluate(1000) # not working :(
+  #dictionary_utils.reduce_tokenized_transcripts(r"C:\Librispeech")
 
 if __name__ == '__main__':
   main()

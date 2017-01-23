@@ -1,7 +1,7 @@
 import os
 from tqdm import tqdm
+import numpy as np
 
-import SpeechDataUtils as SDU
 
 def get_words_dictionary(librispeech_path : str, reduced_dictionary = False):
   # Retrieve existing file
@@ -35,7 +35,7 @@ def get_words_dictionary(librispeech_path : str, reduced_dictionary = False):
 
 def get_words_utterance_counts(librispeech_path : str, descending_order = True):
   words_utterance_counts = dict()
-
+  import SpeechDataUtils as SDU
   preprocess_order = SDU.get_preprocess_order(librispeech_path)
   transcript_files = []
   for preprocess_info in preprocess_order:
@@ -105,32 +105,33 @@ def create_reduced_dictionary(librispeech_path : str, min_utterence_count : int,
   with open(dictionary_path, 'w') as dictionary_file:
     dictionary_file.write(dictionary_to_string)
 
+def reduce_tokenized_transcripts(librispeech_path : str):
+  r_dict, _ = get_words_dictionary(librispeech_path, True)
+  f_dict, _ = get_words_dictionary(librispeech_path, False)
 
-  #r_dict, _ = dictionary_utils.get_words_dictionary(r"D:\tmp\Librispeech", True)
-  #f_dict, _ = dictionary_utils.get_words_dictionary(r"D:\tmp\Librispeech", False)
+  conv_dict = dict()
+  for word in f_dict:
+    f_id = f_dict[word]
+    if word in r_dict:
+      conv_dict[f_id] = r_dict[word]
+    else:
+      conv_dict[f_id] = r_dict["<UNK>"]
+  conv_dict[77963] = r_dict["<EOS>"]
 
-  #conv_dict = dict()
-  #for word in f_dict:
-  #  f_id = f_dict[word]
-  #  if word in r_dict:
-  #    conv_dict[f_id] = r_dict[word]
-  #  else:
-  #    conv_dict[f_id] = r_dict["<UNK>"]
-  #conv_dict[77963] = r_dict["<EOS>"]
+  batches_path = os.path.join(librispeech_path, "batches")
+  filename_1 = "tokenized_transcripts_batch_"
+  filename_2 = "_l1000.npy"
 
-  #batches_path = r"E:\tmp\LibriSpeech\batches"
-  #filename_1 = "tokenized_transcripts_batch_"
-  #filename_2 = "_l250.npy"
+  for i in range(81, 88):
+    filename = filename_1 + str(i) + filename_2
+    fullpath = os.path.join(batches_path, filename)
+    print(i, fullpath)
+    data = np.load(fullpath)
+    w = data.shape[0]
+    h = data.shape[1]
 
-  #for i in range(27, 30):
-  #  filename = filename_1 + str(i) + filename_2
-  #  fullpath = os.path.join(batches_path, filename)
-  #  data = np.load(fullpath)
-  #  w = data.shape[0]
-  #  h = data.shape[1]
+    for i in range(w):
+        for j in range(h):
+          data[i][j] = conv_dict[data[i][j]]
 
-  #  for i in range(w):
-  #      for j in range(h):
-  #        data[i][j] = conv_dict[data[i][j]]
-
-  #  np.save(fullpath, data)
+    np.save(fullpath, data)
