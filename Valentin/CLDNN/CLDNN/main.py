@@ -190,10 +190,11 @@ class CLDNN():
     print("\nTarget words:\n", target_words)
 
 def main():
-  cldnn = CLDNN(r"C:\Librispeech", r"C:\tmp\custom\CLDNN_CTC")
-  cldnn.train(0, 1)
+  librispeech_path = r"C:\tmp\Librispeech"
+  cldnn = CLDNN(librispeech_path, r"C:\tmp\custom\CLDNN_CTC")
+  cldnn.train(125000, 10)
   #cldnn.evaluate(1000) # not working :(
-  #dictionary_utils.reduce_tokenized_transcripts(r"C:\Librispeech")
+  #dictionary_utils.reduce_tokenized_transcripts(librispeech_path)
 
 if __name__ == '__main__':
   main()

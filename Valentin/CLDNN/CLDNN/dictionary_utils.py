@@ -106,8 +106,43 @@ def create_reduced_dictionary(librispeech_path : str, min_utterence_count : int,
     dictionary_file.write(dictionary_to_string)
 
 def reduce_tokenized_transcripts(librispeech_path : str):
+  def reduce_dict_size_of(fullpath : str):
+    data = np.load(fullpath)
+    w = data.shape[0]
+    h = data.shape[1]
+
+    for i in range(w):
+        for j in range(h):
+          data[i][j] = conv_dict[data[i][j]]
+    np.save(fullpath, data)
+
+  def repad(fullpath : str):
+    data = np.load(fullpath)
+    w = data.shape[0]
+    h = data.shape[1]
+
+    for i in range(w):
+      pad_index = h
+      offset = -1
+      for j in range(h):
+        token = data[i][j]
+        pad_index -= 1
+        offset += 1
+        if token != 9632:
+          break
+      line_copy = data[i].copy()
+      for j in range(h):
+        if j <= pad_index:
+          data[i][j] = line_copy[j + offset]
+        else:
+          data[i][j] = 9632
+    np.save(fullpath, data)
+
+
   r_dict, _ = get_words_dictionary(librispeech_path, True)
   f_dict, _ = get_words_dictionary(librispeech_path, False)
+
+  print(r_dict["<EOS>"])
 
   conv_dict = dict()
   for word in f_dict:
@@ -120,18 +155,16 @@ def reduce_tokenized_transcripts(librispeech_path : str):
 
   batches_path = os.path.join(librispeech_path, "batches")
   filename_1 = "tokenized_transcripts_batch_"
-  filename_2 = "_l1000.npy"
 
-  for i in range(81, 88):
-    filename = filename_1 + str(i) + filename_2
-    fullpath = os.path.join(batches_path, filename)
-    print(i, fullpath)
-    data = np.load(fullpath)
-    w = data.shape[0]
-    h = data.shape[1]
-
-    for i in range(w):
-        for j in range(h):
-          data[i][j] = conv_dict[data[i][j]]
-
-    np.save(fullpath, data)
+  batches = ((27, "_l150.npy"), (53, "_l250.npy"), (81, "_l500.npy"), (88, "_l1000.npy"))
+  prev_size = 0
+  for batch in batches:
+    size = batch[0]
+    filename_2 = batch[1]
+    for i in range(prev_size, size):
+      filename = filename_1 + str(i) + filename_2
+      fullpath = os.path.join(batches_path, filename)
+      print(i, fullpath)
+      #reduce_dict_size_of(fullpath)
+      repad(fullpath)
+    prev_size = size
