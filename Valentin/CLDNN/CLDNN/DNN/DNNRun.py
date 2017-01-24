@@ -85,6 +85,8 @@ class DNNRun():
       feed_dict = {
           self.dnn_model.input_placeholder : batch_inputs,
           self.dnn_model.output_placeholder : batch_outputs,
+          self.dnn_model.dropout_placeholder : 0.5,
+          self.dnn_model.learning_rate_placeholder : 1e-4
           }
 
       _, loss_value = self.session.run([self.train_op, self.loss_op], feed_dict = feed_dict)
@@ -107,6 +109,7 @@ class DNNRun():
 
         feed_dict = {
             self.dnn_model.input_placeholder : batch_inputs,
+            self.dnn_model.dropout_placeholder : 1
             }
 
         result = self.session.run(self.inference_op, feed_dict = feed_dict)
@@ -140,6 +143,7 @@ class DNNRun():
       feed_dict = {
           self.dnn_model.input_placeholder : batch_inputs,
           self.dnn_model.output_placeholder : batch_outputs,
+          self.dnn_model.dropout_placeholder : 1
           }
 
       session_eval = self.session.run(self.eval_op, feed_dict = feed_dict)
@@ -151,6 +155,7 @@ class DNNRun():
 
     feed_dict = {
         self.dnn_model.input_placeholder : batch_inputs,
+        self.dnn_model.dropout_placeholder : 1
         }
 
     result = self.session.run(self.inference_op, feed_dict = feed_dict)

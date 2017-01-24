@@ -27,6 +27,9 @@ class DNNModel:
     self.input_placeholder = tf.placeholder(tf.float32, [None, self.input_max_timesteps, self.mfcc_features_count], name="input__placeholder")
     self.output_placeholder = tf.placeholder(tf.int32, shape=[None, self.output_max_timesteps, self.dictionary_size], name="true_output_placeholder")
 
+    self.dropout_placeholder = tf.placeholder(tf.float32, name = "dropout_placeholder")
+    self.learning_rate_placeholder = tf.placeholder(tf.float32, name = "learning_rate_placeholder")
+
     print("Input placeholder : ", self.input_placeholder)
     print("Output placeholder : ", self.output_placeholder)
     print("Inference : ", self.inference)
@@ -50,6 +53,8 @@ class DNNModel:
       biases = DNNModel.biases_variable([network_size],"biases_hidden_layer_" + str(i + 1))
 
       layer = tf.matmul(layer, weights) + biases
+      layer = tf.nn.relu(layer)
+      layer = tf.nn.dropout(layer, self.dropout_placeholder)
 
     weights = DNNModel.weight_variable([network_size, self.output_max_timesteps * self.dictionary_size], "weights_last_layer")
     biases = DNNModel.biases_variable([self.output_max_timesteps * self.dictionary_size],"biases_last_layer")
@@ -66,8 +71,8 @@ class DNNModel:
   @define_scope
   def training(self):
     tf.summary.scalar('loss', self.loss)
-    #optimizer = tf.train.GradientDescentOptimizer(self.config.learning_rate)
-    optimizer = tf.train.MomentumOptimizer(1e-4, 0.9)
+    #optimizer = tf.train.GradientDescentOptimizer(self.learning_rate_placeholder)
+    optimizer = tf.train.MomentumOptimizer(self.learning_rate_placeholder, 0.9)
     global_step = tf.Variable(0, name='global_step', trainable=False)
     train_op = optimizer.minimize(self.loss, global_step = global_step)
     return train_op
