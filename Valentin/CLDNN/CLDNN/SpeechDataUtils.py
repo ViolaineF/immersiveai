@@ -79,13 +79,13 @@ class SpeechDataSet(object):
       self.load_batch()
 
     # Si l'option OneHot est activée, transforme les tokens en vecteurs one-hot dans les outputs (les phrases)
-    if one_hot:
-      outputs = SpeechDataSet.token_to_onehot(outputs, batch_size, self.dictionary_size)
-    else :
-      try:
+    try:
+      if one_hot:
+        outputs = SpeechDataSet.token_to_onehot(outputs, batch_size, self.dictionary_size)
+      else :
         outputs = SpeechDataSet.tokens_for_sparse(outputs)
-      except:
-        return self.next_batch(batch_size, one_hot)
+    except:
+      return self.next_batch(batch_size, one_hot)
 
     batch = (inputs, input_lengths, outputs, output_lengths)
     return batch
