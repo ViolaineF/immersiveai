@@ -1,9 +1,7 @@
 __pycache__/
 obj/
 bin/
-*.suo
 *.MIMIRON
-*.data-00000-of-00001
 *.meta
 *.index
 *.pyc
