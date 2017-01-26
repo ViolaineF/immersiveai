@@ -23,7 +23,6 @@ class SpeechMFCCPreprocessData(object):
 
         samples = np.reshape(samples, (samples_count, channels_count))
         rate = audio_file.frame_rate
-        print(rate)
 
         # Features extracting
         features = []

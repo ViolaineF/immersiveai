@@ -191,12 +191,13 @@ class CLDNN():
     print("\nTarget words:\n", target_words)
 
 def main():
+  timit_database_path = r"C:\tmp\TIMIT"
   librispeech_path = r"C:\tmp\Librispeech"
   #cldnn = CLDNN(librispeech_path, r"C:\tmp\custom\CLDNN_CTC")
   #cldnn.train(125000, 10)
   #cldnn.evaluate(1000) # not working :(
   #dictionary_utils.reduce_tokenized_transcripts(librispeech_path)
-  dnn = DNNRun(librispeech_path, r"C:\tmp\custom\DNN")
+  dnn = DNNRun(librispeech_path, timit_database_path, r"C:\tmp\custom\DNN")
   dnn.train(125000, 10)
 
 if __name__ == '__main__':
