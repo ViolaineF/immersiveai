@@ -41,12 +41,25 @@
     </Compile>
     <Compile Include="SimpleLSTM.py" />
     <Compile Include="SpeechDataUtils.py" />
+    <Compile Include="Timit_utils\TimitDatabase.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Timit_utils\TimitDataset.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Timit_utils\TimitSampleInfo.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Timit_utils\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="ModelConfig.ini" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DNN\" />
+    <Folder Include="Timit_utils\" />
   </ItemGroup>
   <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
   <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
