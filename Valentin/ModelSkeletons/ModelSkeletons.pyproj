@@ -3,15 +3,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>da8df394-ca9d-4763-a389-c95f6d03c776</ProjectGuid>
+    <ProjectGuid>90c7415e-031e-4340-89f3-abd87c1a3cc3</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>main.py</StartupFile>
+    <StartupFile>SupervisedModel.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>Learning_LSTM</Name>
-    <RootNamespace>Learning_LSTM</RootNamespace>
+    <Name>ModelSkeletons</Name>
+    <RootNamespace>ModelSkeletons</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,34 +21,16 @@
     <DebugSymbols>true</DebugSymbols>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="SupervisedModel.py" />
+    <Compile Include="__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="CLDNNModel.py" />
-    <Compile Include="CLDNNConfig.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="dictionary_utils.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="DNN\DNNModel.py" />
-    <Compile Include="DNN\DNNRun.py" />
-    <Compile Include="DNN\__init__.py" />
-    <Compile Include="main.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SimpleLSTM.py" />
-    <Compile Include="SpeechDataUtils.py" />
-    <Compile Include="test_beam_timit.py" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ModelConfig.ini" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DNN\" />
-  </ItemGroup>
   <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
   <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

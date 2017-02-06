@@ -21,6 +21,9 @@ class TimitDataset(object):
     self.phonemes_ids_path = os.path.join(dataset_path, "phonemes_ids_batch.npy")
     self.phonemes_lengths_path = os.path.join(dataset_path, "phonemes_lengths_batch.npy")
 
+    self.words_ids_path = os.path.join(dataset_path, "words_ids_path.npy")
+    self.words_lenghts_path = os.path.join(dataset_path, "words_lenghts_path.npy")
+
     self.lengths_reordering_list = None
     self.lengths_byword_reordering_list = None
 
@@ -28,6 +31,7 @@ class TimitDataset(object):
     self.mfcc_features_lengths = None
     self.phonemes_ids = None
     self.phonemes_lengths = None
+    self.words_ids = None
     self.batch_index = 0
 
     self.phonemes_dictionary_size = 0
@@ -216,6 +220,12 @@ class TimitDataset(object):
     phonemes_lengths = self.reorder_by_mfcc_lenghts(phonemes_lengths)
     np.save(self.phonemes_lengths_path, phonemes_lengths)
 
+  #def build_words_ids_batch(self):
+  #  samples = self.load_samples(load_words = True)
+  #  words_ids = []
+  #  for sample in samples:
+  #    words_infos = sample.words
+
   def load_mfcc_lengths(self):
     self.mfcc_features_lengths = np.load(self.mfcc_lengths_path)
     
@@ -231,13 +241,22 @@ class TimitDataset(object):
     self.phonemes_ids = np.load(self.phonemes_ids_path)
     self.phonemes_lengths = np.load(self.phonemes_lengths_path)
 
+  #def load_batch_byword(self):
+  #  self.mfcc_features = np.load(self.mfcc_features_byword_path)
+  #  self.mfcc_features_lengths = np.load(self.mfcc_lengths_byword_path)
+  #  self.words_ids = np.load(self.words_ids_path)
+
   def shuffle_batch(self):
     order = np.arange(len(self.mfcc_features))
     np.random.shuffle(order)
     self.mfcc_features = self.mfcc_features[order]
     self.mfcc_features_lengths = self.mfcc_features_lengths[order]
-    self.phonemes_ids = self.phonemes_ids[order]
-    self.phonemes_lengths = self.phonemes_lengths[order]
+
+    if self.phonemes_ids is not None:
+      self.phonemes_ids = self.phonemes_ids[order]
+      self.phonemes_lengths = self.phonemes_lengths[order]
+    if self.words_ids is not None:
+      self.words_ids = self.words_ids[order]
 
   @staticmethod
   def to_one_hot(ids : list, ids_class_count : int):
@@ -255,7 +274,7 @@ class TimitDataset(object):
           ids_to_one_hot[i, j, id] = 1
     return ids_to_one_hot
 
-  def next_batch(self, batch_size : int):
+  def next_batch(self, batch_size : int, one_hot = True):
     if self.mfcc_features is None:
       self.load_batch()
       self.shuffle_batch()
@@ -275,5 +294,6 @@ class TimitDataset(object):
       #  mfcc_features_lengths_batch += self.mfcc_features_lengths[0 : self.batch_index]
       #  phonemes_ids_batch          += self.phonemes_ids[0 : self.batch_index]
       #  phonemes_lengths_batch      += self.phonemes_lengths[0 : self.batch_index]
-    phonemes_ids_batch = TimitDataset.to_one_hot(phonemes_ids_batch, self.phonemes_dictionary_size)
+    if(one_hot):
+      phonemes_ids_batch = TimitDataset.to_one_hot(phonemes_ids_batch, self.phonemes_dictionary_size)
     return (mfcc_features_batch, mfcc_features_lengths_batch, phonemes_ids_batch, phonemes_lengths_batch)
