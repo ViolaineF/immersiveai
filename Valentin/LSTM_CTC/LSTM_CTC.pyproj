@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>80a9acd9-57d5-48ef-9432-36bdde4961d6</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>LSTM_CTCModel.py</StartupFile>
+    <StartupFile>main.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -26,9 +26,17 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="LSTM_CTCModel.py" />
+    <Compile Include="LSTM_CTCServer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="main.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="model_config.ini" />
+    <Content Include="server_config.ini" />
+    <Content Include="timit_model_config.ini" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
