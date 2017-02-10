@@ -1,8 +1,8 @@
 import os
 import numpy as np
 
-from Timit_utils.TimitSample import TimitSample
-from Timit_utils.TimitDataset import TimitDataset
+from TimitSample import TimitSample
+from TimitDataset import TimitDataset
 
 class TimitDatabase(object):
     def __init__(self, timit_database_path : str, mfcc_features_count = 40):
@@ -11,29 +11,29 @@ class TimitDatabase(object):
       self.datasets_names = ("train", "test")
 
       # Datasets
-      self.train_dataset = TimitDataset(os.path.join(timit_database_path, "TRAIN"), "train", mfcc_features_count)
-      self.test_dataset = TimitDataset(os.path.join(timit_database_path, "TEST"), "test", mfcc_features_count)
-      self.datasets = (self.train_dataset, self.test_dataset)
+      self.train_dataset = TimitDataset(timit_database_path, "train", mfcc_features_count)
+      #self.test_dataset = TimitDataset(os.path.join(timit_database_path, "TEST"), "test", mfcc_features_count)
+      self.datasets = [self.train_dataset]
       self.load_samples_lists()
 
       # Dictionnaires
       self.words_dictionary_path = os.path.join(self.timit_database_path, "words_dictionary.txt")
       self.phonemes_dictionary_path = os.path.join(self.timit_database_path, "phonemes_dictionary.txt")
-      self.load_words_dictionary()
-      self.load_phonemes_dictionary()
+      #self.load_words_dictionary()
+      #self.load_phonemes_dictionary()
 
-      for i in range(len(self.datasets)):
-        dataset = self.datasets[i]
-        dataset.phonemes_dictionary_size = self.phonemes_dictionary_size
-        dataset.words_dictionary_size = self.words_dictionary_size
+      #for i in range(len(self.datasets)):
+      #  dataset = self.datasets[i]
+      #  dataset.phonemes_dictionary_size = self.phonemes_dictionary_size
+      #  dataset.words_dictionary_size = self.words_dictionary_size
 
     def load_samples_lists(self) -> dict:
       for dataset in self.datasets:
         dataset.load_samples_list()
 
-    def build_samples_mfcc_features(self, by_word = False):
+    def build_samples_mfcc_features(self):
       for dataset in self.datasets:
-        dataset.build_samples_mfcc_features(by_word)
+        dataset.build_samples_mfcc_features()
         
     def build_dictionaries(self): # word and phonemes
       words = []
@@ -154,10 +154,16 @@ class TimitDatabase(object):
         max_phonemes_length = max(max_phonemes_length, np.max(dataset.phonemes_lengths))
       return max_phonemes_length
 
-#timit_database_path = r"C:\tmp\TIMIT"
-#data = TimitDatabase(timit_database_path)
+def main():
+    timit_database_path = r"C:\Users\Violaine Fayolle\Documents\M2\Projet Senior\DataBase\TimbreAnalysis\BerlinEMO"
+    data = TimitDatabase(timit_database_path)
+    data.build_samples_mfcc_features()
+    #data.load_samples_lists()
+
+main()
+#
 ##data.build_samples_mfcc_features(by_word = False)
-##data.build_samples_mfcc_features(by_word = True)
+##(by_word = True)
 ##data.build_dictionaries()
 ##samples = data.samples_list["train"][:1]
 ##for sample_name in samples:

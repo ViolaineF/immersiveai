@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from Timit_utils.TimitSample import TimitSample
+from TimitSample import TimitSample
 
 class TimitDataset(object):
   def __init__(self, dataset_path : str, name : str, mfcc_features_count = 40):
@@ -77,7 +77,7 @@ class TimitDataset(object):
         continue
       sample_root = root[base_path_len:]
       for file in files:
-        if not file.endswith(".TXT"):
+        if not file.endswith(".wav"):
           continue
         samples_names.append(sample_root + '\\' + file[:-4])
     # Building of final string to write
@@ -89,10 +89,10 @@ class TimitDataset(object):
       samples_list_file.write(samples_names_string)
     return samples_names
 
-  def build_samples_mfcc_features(self, by_word):
+  def build_samples_mfcc_features(self):
     for sample_name in self.samples_names:
       sample = TimitSample(sample_name, self.dataset_path)
-      sample.preprocess_wav_file_to_mfcc(self.mfcc_features_count, by_word)
+      sample.preprocess_wav_file_to_mfcc(self.mfcc_features_count)
 
   def build_mfcc_lengths_batch(self):
     lengths = []

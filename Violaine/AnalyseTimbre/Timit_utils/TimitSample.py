@@ -22,13 +22,13 @@ N - Neutral
 class TimitSample(object):
   def __init__(self, sample_name : str, timit_dataset_path : str):
     self.sample_name = sample_name
-    self.audio_file_name = sample_name + ".WAV"
+    self.audio_file_name = sample_name + ".wav"
     self.emotion_labels = sample_name[5]
     #self.phonemes_file_name = sample_name + ".PHN"
     #self.sentence_file_name = sample_name + ".TXT"
     #self.words_file_name = sample_name + ".WRD"
     self.mfcc_file_name = sample_name + ".npy"
-    self.mfcc_byword_file_name = sample_name + "_byword.npy"
+    #self.mfcc_byword_file_name = sample_name + "_byword.npy"
 
     self.timit_dataset_path = timit_dataset_path
 
@@ -38,10 +38,10 @@ class TimitSample(object):
     #self.words = None
     self.mfcc = None
     self.mfcc_length = None
-    self.mfcc_byword = None
-    self.mfcc_byword_length = None
+    #self.mfcc_byword = None
+    #self.mfcc_byword_length = None
 
-  def preprocess_wav_file_to_mfcc(self, features_count = 40, by_word = False):
+  def preprocess_wav_file_to_mfcc(self, features_count = 40):
     audio_file_path = self.timit_dataset_path + self.audio_file_name
 
     with sf.SoundFile(audio_file_path, 'r') as audio_file:
@@ -49,24 +49,12 @@ class TimitSample(object):
       sample_rate = audio_file.samplerate
       data = audio_file.read()
 
-    if not by_word:
-      mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count)
-      mfcc_file_path = self.timit_dataset_path + self.mfcc_file_name
-    else:
-      if self.words is None:
-        self._load_words()
-      mfcc_feat = []
-      for start, end, _ in self.words:
-        if start == end:
-          continue
-        word_mfcc_feat = mfcc(data[start:end], sample_rate, nfilt = features_count, numcep = features_count)
-        mfcc_feat.append(word_mfcc_feat)
-      mfcc_feat = np.array(mfcc_feat)
-      mfcc_file_path = self.timit_dataset_path + self.mfcc_byword_file_name
+    mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count)
+    mfcc_file_path = self.timit_dataset_path + self.mfcc_file_name
     np.save(mfcc_file_path, mfcc_feat)
 
   def load(self,
-           load_labels = False, load_mfcc = False, load_mfcc_byword = False, load_wav = False):
+           load_labels = False, load_mfcc = False, load_wav = False):
     if load_labels:
       self._load_labels()
     #if load_sentence:
@@ -75,8 +63,8 @@ class TimitSample(object):
     #  self._load_words()
     if load_mfcc:
       self._load_mfcc()
-    if load_mfcc_byword:
-      self._load_mfcc_byword()
+    #if load_mfcc_byword:
+    #  self._load_mfcc_byword()
     if load_wav:
       self._load_wav()
 
@@ -119,12 +107,12 @@ class TimitSample(object):
     self.mfcc = data
     self.mfcc_length = np.shape(data)[0]
 
-  def _load_mfcc_byword(self):
-    data = np.load(self.timit_dataset_path + self.mfcc_byword_file_name)
-    self.mfcc_byword = data
-    self.mfcc_byword_length = []
-    for i in range(np.shape(data)[0]):
-      self.mfcc_byword_length.append(np.shape(data[i])[0])
+  #def _load_mfcc_byword(self):
+  #  data = np.load(self.timit_dataset_path + self.mfcc_byword_file_name)
+  #  self.mfcc_byword = data
+  #  self.mfcc_byword_length = []
+  #  for i in range(np.shape(data)[0]):
+  #    self.mfcc_byword_length.append(np.shape(data[i])[0])
 
   def _load_wav(self):
     with sf.SoundFile(self.timit_dataset_path + self.audio_file_name, 'r') as audio_file:
