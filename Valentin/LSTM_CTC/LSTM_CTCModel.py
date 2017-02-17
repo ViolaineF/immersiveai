@@ -18,6 +18,9 @@ class LSTM_CTCModel(SupervisedModel):
         self.loss
         self.training
         self.decoded_inference
+        self.evaluation
+
+        self.session = None
 
     def build_placeholders(self):
         self.input_placeholder = tf.placeholder(tf.float32, shape = [None, self.config.input_max_time, self.config.input_frame_size], name = "input_placeholder")
@@ -31,56 +34,70 @@ class LSTM_CTCModel(SupervisedModel):
         with tf.name_scope("LSTM"):
             cell = tf.nn.rnn_cell.LSTMCell(self.config.cell_size)
             cell = tf.nn.rnn_cell.MultiRNNCell([cell] * self.config.cell_count)
-            rnn, _ = tf.nn.dynamic_rnn(cell, self.input_placeholder, self.input_lengths_placeholder, dtype = tf.float32)
+
+            cell_initial = cell.zero_state(tf.shape(self.input_placeholder)[0], tf.float32)
+            rnn, _ = tf.nn.dynamic_rnn(cell, self.input_placeholder, self.output_lengths_placeholder, cell_initial)
 
             flatten_rnn = tf.reshape(rnn, shape = [-1, self.config.input_max_time * self.config.cell_size])
+            #flatten_rnn = tf.reshape(rnn, shape = [-1, self.config.fully_connected_size])
 
         # Hidden layers
         layer = flatten_rnn
+        previous_layer_size = int(layer.get_shape()[1])
         for i in range(self.config.fully_connected_count):
             with tf.name_scope("FullyConnected_n" + str(i)):
-                previous_layer_size = int(layer.get_shape()[1])
                 # WEIGHTS & BIASES #
-                weights = tf.Variable(tf.random_normal(shape = [previous_layer_size, self.config.fully_connected_size], stddev = 0.1))
-                biases = tf.Variable(tf.zeros(shape = [self.config.fully_connected_size]))
+                weights = tf.Variable(tf.random_normal(shape = [previous_layer_size, self.config.fully_connected_size], stddev = 0.1), name = "Weights_n" + str(i))
+                biases = tf.Variable(tf.zeros(shape = [self.config.fully_connected_size]), name = "Biases_n" + str(i))
                 # MATMUL + RELU #
                 layer = tf.matmul(layer, weights) + biases
                 layer = tf.nn.relu(layer)
+                #layer = tf.nn.softplus(layer)
+                #layer = tf.nn.softmax(layer)
+                previous_layer_size = int(layer.get_shape()[1])
 
-        # Last layer
-        # WEIGHTS & BIASES #
-        weights = tf.Variable(tf.random_normal(shape = [self.config.fully_connected_size, self.config.output_max_time * self.config.output_frame_size],stddev = 0.1))
-        biases = tf.Variable(tf.zeros(shape = [self.config.output_max_time * self.config.output_frame_size]))
-        # MATMUL + RELU #
-        layer = tf.matmul(layer, weights) + biases
-        layer = tf.nn.relu(layer)
-    
+        with tf.name_scope("FullyConnected_Last"):
+            # Last layer
+            # WEIGHTS & BIASES #
+            weights = tf.Variable(tf.random_normal(shape = [previous_layer_size, self.config.output_max_time * self.config.output_frame_size], stddev = 0.1))
+            biases = tf.Variable(tf.zeros(shape = [self.config.output_max_time * self.config.output_frame_size]))
+            # MATMUL + RELU #
+            layer = tf.matmul(layer, weights) + biases
+            #layer = tf.nn.relu(layer)
+            #layer = tf.nn.softmax(layer)
+
         logits = tf.reshape(layer, shape = [-1, self.config.output_max_time, self.config.output_frame_size])
         return logits
 
     @define_scope
     def loss(self):
-        logits_timemajor = tf.transpose(self.inference, [1, 0, 2])
-        ctc_loss = tf.nn.ctc_loss(logits_timemajor, self.output_placeholder, self.output_lengths_placeholder)
-        return tf.reduce_mean(ctc_loss)
+        #logits_timemajor = tf.transpose(self.inference, [1, 0, 2])
+        ctc_loss = tf.nn.ctc_loss(self.inference, self.output_placeholder, self.output_lengths_placeholder, time_major = False)
+        return tf.reduce_mean(ctc_loss, name = "cost")
 
     @define_scope
     def training(self):
-        tf.summary.scalar('loss', self.loss)
-        global_step = tf.Variable(0, name='global_step', trainable=False)
+        tf.summary.scalar("loss", self.loss)
+        tf.summary.scalar("error", self.evaluation)
+        global_step = tf.Variable(0, name="global_step", trainable=False)
 
-        optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
+        optimizer = tf.train.AdamOptimizer(self.config.learning_rate, epsilon = 1e-03)
         return optimizer.minimize(self.loss, global_step = global_step)
-
-    @define_scope
-    def evaluation(self):
-        pass
 
     @define_scope
     def decoded_inference(self):
         inference_timemajor = tf.transpose(self.inference, [1, 0, 2])
         decoded, prob = tf.nn.ctc_greedy_decoder(inference_timemajor, self.output_lengths_placeholder)
         return decoded
+
+    @define_scope
+    def evaluation(self):
+        average_error = []
+        for result in self.decoded_inference:
+            predictions = tf.cast(result, tf.int32)
+            error = tf.edit_distance(predictions, self.output_placeholder, normalize = True)
+            average_error.append(tf.reduce_mean(error, name='error'))
+        return tf.reduce_mean(average_error)
  
     @staticmethod
     def tokens_for_sparse(sequences):
@@ -100,36 +117,49 @@ class LSTM_CTCModel(SupervisedModel):
         values = []
 
         for n, seq in enumerate(sequences):
-            indices.extend(zip([n]*len(seq), range(len(seq))))
+            indices.extend(zip([n] * len(seq), range(len(seq))))
             values.extend(seq)
 
         indices = np.asarray(indices, dtype=np.int64)
         values = np.asarray(values, dtype=np.int32)
-        shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1]+1], dtype=np.int64)
+        shape = np.asarray([len(sequences), np.asarray(indices).max(0)[1] + 1], dtype=np.int64)
 
         return indices, values, shape
 
-    def train(self, train_data, iteration_count  : int, batch_size : int):
+    def train(self, database, iteration_count  : int, batch_size : int):
         session_config = tf.ConfigProto()
         session_config.gpu_options.allow_growth = True
-
         self.session = tf.Session(config = session_config)
 
         self.init_model()
+
+        train_data = database.train_dataset
         for i in tqdm(range(iteration_count)):
             feed_dict = self.train_step(train_data, batch_size)
-            if((i + 1)%100 == 0):
+            if feed_dict is None:
+                continue
+
+            for key in feed_dict:
+                if feed_dict[key] is None:
+                    continue
+
+            if len(feed_dict) == 0:
+                continue
+
+            if((i + 1) % 10 == 0):
                 summary_str = self.session.run(self.summary, feed_dict = feed_dict)
                 self.summary_writer.add_summary(summary_str, i)
                 self.summary_writer.flush()
+
+            if((i + 1) % 100 == 0):
+                
                 print('######')
                 print("Loss :", self.session.run(self.loss, feed_dict = feed_dict))
                 print('######')
 
-            if((i + 1)%1000 == 0):
+            if((i + 1) % 1000 == 0):
                 self.saver.save(self.session, self.config.checkpoints_path + r"\network", global_step=i)
-
-        self.test(train_data)
+                self.test(database)
 
     def init_model(self):
         self.summary = tf.summary.merge_all()
@@ -138,20 +168,30 @@ class LSTM_CTCModel(SupervisedModel):
         checkpoint = tf.train.get_checkpoint_state(self.config.checkpoints_path)
 
         if checkpoint and checkpoint.model_checkpoint_path:
+            print("Found existing checkpoint, loading ...")
             self.saver.restore(self.session, checkpoint.model_checkpoint_path)
         else: 
+            print("Didn't find existing checkpoint, creating one ...")
             self.session.run(tf.global_variables_initializer())
+        print("Model initialized !")
 
-    def train_step(self, database, batch_size : int):
-        train_data = database.train_dataset
-        batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = train_data.next_batch(batch_size, one_hot=False)
+    def get_feed_dict(self, dataset, batch_size, one_hot = False):
+        batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = dataset.next_batch(batch_size, one_hot = one_hot)
 
         tmp = []
         for j in range(len(batch_outputs)):
             tmp.append(batch_outputs[j][:batch_output_lengths[j]])
 
         batch_outputs_feed = np.array(tmp)
-        batch_outputs_feed = LSTM_CTCModel.tokens_for_sparse(batch_outputs_feed)
+        try:
+            batch_outputs_feed = LSTM_CTCModel.tokens_for_sparse(batch_outputs_feed)
+        except:
+            return None
+
+        tmp = []
+        for j in range(len(batch_inputs)):
+            tmp.append(batch_inputs[j][:self.config.input_max_time])
+        batch_inputs = np.array(tmp)
 
         feed_dict = \
         {
@@ -161,68 +201,24 @@ class LSTM_CTCModel(SupervisedModel):
             self.output_lengths_placeholder : batch_output_lengths
         }
 
+        return feed_dict
+
+    def train_step(self, train_data, batch_size : int):
+        feed_dict = self.get_feed_dict(train_data, batch_size, one_hot = False)
         self.session.run(self.training, feed_dict = feed_dict)
         return feed_dict
 
-    def test(self, database):
-        ##### TEST #####
+    def test(self, database, batch_size = 1000):
+        if self.session is None:
+            session_config = tf.ConfigProto()
+            session_config.gpu_options.allow_growth = True
+
+            self.session = tf.Session(config = session_config)
+            self.init_model()
+
         test_data = database.test_dataset
-        batch_inputs, batch_input_lengths, batch_outputs, batch_output_lengths = test_data.next_batch(1, False)
+        feed_dict = self.get_feed_dict(test_data, batch_size, one_hot = False)
 
-        tmp = []
-        for j in range(len(batch_outputs)):
-            tmp.append(batch_outputs[j][:batch_output_lengths[j]])
-
-        batch_outputs_feed = np.array(tmp)
-        batch_outputs_feed = LSTM_CTCModel.tokens_for_sparse(batch_outputs_feed)
-
-        feed_dict = \
-        {
-            self.input_placeholder : batch_inputs,
-            self.input_lengths_placeholder : batch_input_lengths,
-            self.output_placeholder : batch_outputs_feed,
-            self.output_lengths_placeholder : batch_output_lengths
-        }
-
-        decoded = self.session.run(self.decoded_inference, feed_dict = feed_dict)
-
-        results = []
-        for decoded_path in decoded:
-            phonemes_ids = decoded_path.values
-            result_words = ""
-            for idx in phonemes_ids:
-                word = database.id_to_phoneme_dictionary[idx]
-                if word != "<EOS>":
-                    result_words += word + ' '
-            results += [result_words]
-
-        target = batch_outputs[0]
-        target_words = ""
-        for idx in target:
-            word = database.id_to_phoneme_dictionary[idx]
-            if word != "<EOS>":
-                target_words += word + ' '
-
-        print("--------------")
-        print("--------------")
-        print("--------------")
-        print("Target : \n", target_words, '\n')
-        print("Results")
-        for result_sentence in results:
-            print(result_sentence)
-        #print(prob)
-        print("--------------")
-        print("--------------")
-        print("--------------")
-
-        eval = self.session.run(tf.edit_distance(tf.cast(self.decoded_inference[0], tf.int32), self.output_placeholder), feed_dict = feed_dict)
-        print(eval)
-
-if __name__ == '__main__':
-    model_config = LSTM_CTCModelConfig("timit_model_config.ini")
-    model = LSTM_CTCModel(model_config)
-
-    timit_database = TimitDatabase(r"C:\tmp\TIMIT")
-    train_data = timit_database.train_dataset
-
-    model.train(train_data, 0, 11)
+        print('#-----#')
+        print("Evaluation :", (1 - self.session.run(self.evaluation, feed_dict = feed_dict)) * 100, '%')
+        print('#-----#')

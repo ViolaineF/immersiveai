@@ -9,9 +9,9 @@ def train():
     model = LSTM_CTCModel(model_config)
 
     timit_database = TimitDatabase(r"C:\tmp\TIMIT")
-    train_data = timit_database.train_dataset
 
-    model.train(timit_database, 0, 11)
+    model.train(timit_database, 50000, 11)
+    model.test(timit_database, batch_size = 3000)
 
 def run_server():
     model_config = LSTM_CTCModelConfig("timit_model_config.ini")

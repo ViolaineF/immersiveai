@@ -1,6 +1,6 @@
 from pydub import AudioSegment
 
-from python_speech_features import mfcc
+from python_speech_features import mfcc, fbank
 
 import numpy as np
 import soundfile as sf
@@ -33,9 +33,9 @@ class TimitSample(object):
       channels_count = audio_file.channels
       sample_rate = audio_file.samplerate
       data = audio_file.read()
-
     if not by_word:
-      mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count)
+      #mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count)
+      mfcc_feat, _energy = fbank(data, sample_rate, nfilt = features_count)
       mfcc_file_path = self.timit_dataset_path + self.mfcc_file_name
     else:
       if self.words is None:
@@ -44,7 +44,8 @@ class TimitSample(object):
       for start, end, _ in self.words:
         if start == end:
           continue
-        word_mfcc_feat = mfcc(data[start:end], sample_rate, nfilt = features_count, numcep = features_count)
+        #word_mfcc_feat = mfcc(data[start:end], sample_rate, nfilt = features_count, numcep = features_count)
+        word_mfcc_feat, _energy = fbank(data[start:end], sample_rate, nfilt = features_count)
         mfcc_feat.append(word_mfcc_feat)
       mfcc_feat = np.array(mfcc_feat)
       mfcc_file_path = self.timit_dataset_path + self.mfcc_byword_file_name

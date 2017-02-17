@@ -96,10 +96,10 @@ class TimitDatabase(object):
       self.max_mfcc_length_by_word = 0
 
     def build_batches(self):
-      #self.build_mfcc_lengths_batches()
-      #self.build_mfcc_lengths_batches_byword()
-      #self.build_mfcc_batches()
-      #self.build_mfcc_batches_byword()
+      self.build_mfcc_lengths_batches()
+      self.build_mfcc_lengths_batches_byword()
+      self.build_mfcc_batches()
+      self.build_mfcc_batches_byword()
       self.build_phonemes_lengths_batches()
       self.build_phonemes_ids_batches()
 
@@ -144,7 +144,7 @@ class TimitDatabase(object):
       max_mfcc_features_length_byword = 0
       for dataset in self.datasets:
         dataset.load_mfcc_lengths_byword()
-        max_mfcc_features_length = max(np.max(dataset.mfcc_features_lengths_byword), max_mfcc_features_length_byword)
+        max_mfcc_features_length_byword = max(np.max(dataset.mfcc_features_lengths_byword), max_mfcc_features_length_byword)
       return max_mfcc_features_length_byword
 
     def get_max_phonemes_length(self):
@@ -154,16 +154,21 @@ class TimitDatabase(object):
         max_phonemes_length = max(max_phonemes_length, np.max(dataset.phonemes_lengths))
       return max_phonemes_length
 
-#timit_database_path = r"C:\tmp\TIMIT"
-#data = TimitDatabase(timit_database_path)
-##data.build_samples_mfcc_features(by_word = False)
-##data.build_samples_mfcc_features(by_word = True)
-##data.build_dictionaries()
-##samples = data.samples_list["train"][:1]
-##for sample_name in samples:
-##  sample_info = TimitSample(sample_name, data.datasets_paths["train"])
-##  sample_info.load(load_phonemes = False, load_sentence = False, load_words = True, load_mfcc = False)
-#data.build_batches()
-##data.datasets[0].build_mfcc_lengths_batch()
-#_, mfcc_features_lengths_batch, _, phonemes_lengths_batch = data.datasets[0].next_batch(1)
-#print(mfcc_features_lengths_batch, phonemes_lengths_batch)
+def main():
+    print("Loading database infos...")
+    timit_database_path = r"C:\tmp\TIMIT"
+    data = TimitDatabase(timit_database_path)
+
+    print("Building MFCC Samples")
+    #data.build_samples_mfcc_features(by_word = False)
+    print("Building MFCC Samples (by_word)")
+    #data.build_samples_mfcc_features(by_word = True)
+
+    print("Building dictionary")
+    #data.build_dictionaries()
+
+    print("Building batches from samples")
+    data.build_batches()
+
+if __name__ == '__main__':
+    main()
