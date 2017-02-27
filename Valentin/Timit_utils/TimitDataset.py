@@ -89,10 +89,10 @@ class TimitDataset(object):
       samples_list_file.write(samples_names_string)
     return samples_names
 
-  def build_samples_mfcc_features(self, by_word):
+  def build_samples_mfcc_features(self, by_word, winstep = 0.01, winlen = 0.025):
     for sample_name in self.samples_names:
       sample = TimitSample(sample_name, self.dataset_path)
-      sample.preprocess_wav_file_to_mfcc(self.mfcc_features_count, by_word)
+      sample.preprocess_wav_file_to_mfcc(self.mfcc_features_count, by_word, winstep, winlen)
 
   def build_mfcc_lengths_batch(self):
     lengths = []
@@ -101,7 +101,6 @@ class TimitDataset(object):
       lengths.append(sample.mfcc_length)
     lengths = sorted(lengths)
     np.save(self.mfcc_lengths_path, lengths)
-    print(lengths[:10])
 
   def build_mfcc_lengths_batch_byword(self):
     lengths = []
@@ -140,6 +139,7 @@ class TimitDataset(object):
     # Padding
     batch_size = len(samples)
     mfcc_batch = np.zeros([batch_size, max_mfcc_length, self.mfcc_features_count])
+    print("build_mfcc batch dimensions: ", [batch_size, max_mfcc_length, self.mfcc_features_count])
     for i in range(batch_size):
       for j in range(lengths[i]):
         for k in range(self.mfcc_features_count):
@@ -178,11 +178,12 @@ class TimitDataset(object):
     # Padding
     batch_size = len(lengths)
     mfcc_batch = np.zeros([batch_size, max_mfcc_byword_length, self.mfcc_features_count])
+    print("build_mfcc_by_word batch dimensions: ", [batch_size, max_mfcc_byword_length, self.mfcc_features_count])
     index = 0
     for i in range(batch_size):
       for j in range(lengths[i]):
         for k in range(self.mfcc_features_count):
-          mfcc_batch[i, j, k] = mfcc_features_byword[i][j,k]
+          mfcc_batch[i, j, k] = mfcc_features_byword[i][j][k]
     # Saving
     np.save(self.mfcc_features_byword_path, mfcc_batch)
 
@@ -296,4 +297,4 @@ class TimitDataset(object):
       #  phonemes_lengths_batch      += self.phonemes_lengths[0 : self.batch_index]
     if(one_hot):
       phonemes_ids_batch = TimitDataset.to_one_hot(phonemes_ids_batch, self.phonemes_dictionary_size)
-    return (mfcc_features_batch, mfcc_features_lengths_batch, phonemes_ids_batch, phonemes_lengths_batch)
+    return (mfcc_features_batch, mfcc_features_lengths_batch, phonemes_lengths_batch, phonemes_ids_batch)

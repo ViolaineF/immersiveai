@@ -61,10 +61,20 @@ class mnist_model:
 
     # 2nd Layer (Convolution + ReLU + Max pooling)
     with tf.name_scope('conv2'):
-      weights = mnist_model.weight_variable([self.kernel_size, self.kernel_size, self.conv1_features_count, self.conv2_features_count])
-      biases = mnist_model.bias_variable([self.conv2_features_count])
-      hidden_conv_layer2 = tf.nn.relu(mnist_model.conv2d(hidden_max_pool_layer1, weights) + biases)
-      hidden_max_pool_layer2 = mnist_model.max_pool_2x2(hidden_conv_layer2)
+      #weights = mnist_model.weight_variable([self.kernel_size, self.kernel_size, self.conv1_features_count, self.conv2_features_count])
+      #biases = mnist_model.bias_variable([self.conv2_features_count])
+      #hidden_conv_layer2 = tf.nn.relu(mnist_model.conv2d(hidden_max_pool_layer1, weights) + biases)
+      hidden_conv_layer2 = tf.layers.conv2d(
+        inputs = hidden_max_pool_layer1,
+        filters = self.conv2_features_count,
+        kernel_size = [self.kernel_size, self.kernel_size],
+        padding = "same",
+        activation = tf.nn.relu)
+      #hidden_max_pool_layer2 = mnist_model.max_pool_2x2(hidden_conv_layer2)
+      hidden_max_pool_layer2 = tf.layers.max_pooling2d(
+        inputs = hidden_conv_layer2,
+        pool_size = [2, 2],
+        strides = [2, 2])
 
     # 3rd Layer (Fully connected)
     with tf.name_scope('fully_connected1'):
@@ -72,9 +82,10 @@ class mnist_model:
       fc_size = int(convoluted_image_size * self.conv2_features_count)
 
       hidden_max_pool_layer2_flatten = tf.reshape(hidden_max_pool_layer2, [-1, fc_size])
-      weights = mnist_model.weight_variable([fc_size, self.fully_connected_units_count])
-      biaises = mnist_model.bias_variable([self.fully_connected_units_count])
-      hidden_fc_layer1 = tf.nn.relu(tf.matmul(hidden_max_pool_layer2_flatten, weights) + biaises)
+      hidden_fc_layer1 = tf.layers.dense(hidden_max_pool_layer2_flatten, self.fully_connected_units_count, activation = tf.nn.relu)
+      #weights = mnist_model.weight_variable([fc_size, self.fully_connected_units_count])
+      #biaises = mnist_model.bias_variable([self.fully_connected_units_count])
+      #hidden_fc_layer1 = tf.nn.relu(tf.matmul(hidden_max_pool_layer2_flatten, weights) + biaises)
   
       ## Dropout
     hidden_fc_layer1_drop = tf.nn.dropout(hidden_fc_layer1, self.dropout_placeholder)
@@ -90,7 +101,7 @@ class mnist_model:
 
   @define_scope
   def loss(self):
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(self.inference, self.output_placeholder)
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits = self.inference, labels = self.output_placeholder)
     return tf.reduce_mean(cross_entropy)
 
   @define_scope

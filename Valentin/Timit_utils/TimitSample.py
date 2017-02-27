@@ -26,7 +26,7 @@ class TimitSample(object):
     self.mfcc_byword = None
     self.mfcc_byword_length = None
 
-  def preprocess_wav_file_to_mfcc(self, features_count = 40, by_word = False):
+  def preprocess_wav_file_to_mfcc(self, features_count = 40, by_word = False, winstep = 0.01, winlen = 0.025):
     audio_file_path = self.timit_dataset_path + self.audio_file_name
 
     with sf.SoundFile(audio_file_path, 'r') as audio_file:
@@ -35,7 +35,7 @@ class TimitSample(object):
       data = audio_file.read()
 
     if not by_word:
-      mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count)
+      mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count, winstep = winstep, winlen = winlen)
       mfcc_file_path = self.timit_dataset_path + self.mfcc_file_name
     else:
       if self.words is None:
@@ -44,7 +44,7 @@ class TimitSample(object):
       for start, end, _ in self.words:
         if start == end:
           continue
-        word_mfcc_feat = mfcc(data[start:end], sample_rate, nfilt = features_count, numcep = features_count)
+        word_mfcc_feat = mfcc(data[start:end], sample_rate, nfilt = features_count, numcep = features_count, winstep = winstep, winlen = winlen)
         mfcc_feat.append(word_mfcc_feat)
       mfcc_feat = np.array(mfcc_feat)
       mfcc_file_path = self.timit_dataset_path + self.mfcc_byword_file_name

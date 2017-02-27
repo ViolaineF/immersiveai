@@ -31,9 +31,9 @@ class TimitDatabase(object):
       for dataset in self.datasets:
         dataset.load_samples_list()
 
-    def build_samples_mfcc_features(self, by_word = False):
+    def build_samples_mfcc_features(self, by_word = False, winstep = 0.01, winlen = 0.025):
       for dataset in self.datasets:
-        dataset.build_samples_mfcc_features(by_word)
+        dataset.build_samples_mfcc_features(by_word, winstep, winlen)
         
     def build_dictionaries(self): # word and phonemes
       words = []
@@ -96,11 +96,17 @@ class TimitDatabase(object):
       self.max_mfcc_length_by_word = 0
 
     def build_batches(self):
-      #self.build_mfcc_lengths_batches()
-      #self.build_mfcc_lengths_batches_byword()
-      #self.build_mfcc_batches()
-      #self.build_mfcc_batches_byword()
+      print("Building TIMIT batches : Sentence MFCCs Lengths")
+      self.build_mfcc_lengths_batches()
+      print("Building TIMIT batches : Words MFCCs Lengths")
+      self.build_mfcc_lengths_batches_byword()
+      print("Building TIMIT batches : Sentences MFCCs")
+      self.build_mfcc_batches()
+      print("Building TIMIT batches : Words MFCCs")
+      self.build_mfcc_batches_byword()
+      print("Building TIMIT batches : Phonemes Lengths")
       self.build_phonemes_lengths_batches()
+      print("Building TIMIT batches : IDs")
       self.build_phonemes_ids_batches()
 
     def build_mfcc_lengths_batches(self):
@@ -144,7 +150,7 @@ class TimitDatabase(object):
       max_mfcc_features_length_byword = 0
       for dataset in self.datasets:
         dataset.load_mfcc_lengths_byword()
-        max_mfcc_features_length = max(np.max(dataset.mfcc_features_lengths_byword), max_mfcc_features_length_byword)
+        max_mfcc_features_length_byword = max(np.max(dataset.mfcc_features_lengths_byword), max_mfcc_features_length_byword)
       return max_mfcc_features_length_byword
 
     def get_max_phonemes_length(self):
@@ -154,16 +160,20 @@ class TimitDatabase(object):
         max_phonemes_length = max(max_phonemes_length, np.max(dataset.phonemes_lengths))
       return max_phonemes_length
 
-#timit_database_path = r"C:\tmp\TIMIT"
-#data = TimitDatabase(timit_database_path)
-##data.build_samples_mfcc_features(by_word = False)
-##data.build_samples_mfcc_features(by_word = True)
-##data.build_dictionaries()
-##samples = data.samples_list["train"][:1]
-##for sample_name in samples:
-##  sample_info = TimitSample(sample_name, data.datasets_paths["train"])
-##  sample_info.load(load_phonemes = False, load_sentence = False, load_words = True, load_mfcc = False)
-#data.build_batches()
-##data.datasets[0].build_mfcc_lengths_batch()
-#_, mfcc_features_lengths_batch, _, phonemes_lengths_batch = data.datasets[0].next_batch(1)
-#print(mfcc_features_lengths_batch, phonemes_lengths_batch)
+def build_timit_database(timit_database_path):
+  print("Build TIMIT database : initializing...")
+  data = TimitDatabase(timit_database_path)
+  print("Build TIMIT database : starting ...")
+  print("Build TIMIT database : building by sentence ...")
+  #data.build_samples_mfcc_features(by_word = False, winstep = 0.1, winlen = 0.1)
+  print("Build TIMIT database : building by word ...")
+  data.build_samples_mfcc_features(by_word = True, winstep = 0.05, winlen = 0.1)
+  print("Build TIMIT database : building dictionary ...")
+  data.build_dictionaries()
+  print("Build TIMIT database : building datasets batches ...")
+  data.build_batches()
+  print("Build TIMIT database : finished !")
+
+if __name__ == "__main__":
+  timit_database_path = r"E:\tmp\TIMIT"
+  build_timit_database(timit_database_path)
