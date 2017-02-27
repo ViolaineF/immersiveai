@@ -183,12 +183,7 @@ class TimitDataset(object):
     for i in range(batch_size):
       for j in range(lengths[i]):
         for k in range(self.mfcc_features_count):
-<<<<<<< HEAD
           mfcc_batch[i, j, k] = mfcc_features_byword[i][j][k]
-=======
-          if k < len(mfcc_features_byword[i][j]):
-            mfcc_batch[i, j, k] = mfcc_features_byword[i][j,k]
->>>>>>> origin/master
     # Saving
     np.save(self.mfcc_features_byword_path, mfcc_batch)
 
@@ -280,7 +275,7 @@ class TimitDataset(object):
           ids_to_one_hot[i, j, id] = 1
     return ids_to_one_hot
 
-  def next_batch(self, batch_size : int, one_hot = False):
+  def next_batch(self, batch_size : int, one_hot = True):
     if self.mfcc_features is None:
       self.load_batch()
       self.shuffle_batch()
