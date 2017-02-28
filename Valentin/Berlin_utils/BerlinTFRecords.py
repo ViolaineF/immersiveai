@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 import os
 
-from BerlinDatabase import BerlinDatabase
+from Berlin_utils.BerlinDatabase import BerlinDatabase
 
 def _int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
@@ -79,6 +79,36 @@ class BerlinTFRecords(object):
             )
 
         mfcc = tf.decode_raw(features["mfcc_raw"], tf.float32)
+        mfcc.set_shape([40*36])
+
+        mfcc_length = tf.cast(features["mfcc_length"], tf.int32)
+
+        label = tf.cast(features["label"], tf.int32)
+
+        return mfcc, mfcc_length, label
+
+def input_fn(dataset_path, batch_size, capacity = 1000):
+    FEATURES = ["mfcc", "mfcc_lengths"]
+    feat_count = len(FEATURES)
+
+    filename_queue = tf.train.string_input_producer(
+        [dataset_path],
+        num_epochs = None)
+
+    mfcc, lengths, labels = BerlinTFRecords.read_and_decode_dataset(filename_queue)
+    dataset = tf.train.shuffle_batch(
+        tensors = [mfcc, lengths, labels],
+        batch_size = batch_size,
+        num_threads = 3,
+        capacity = capacity + 3 * batch_size,
+        min_after_dequeue = capacity)
+
+    feature_cols = {FEATURES[k] : dataset[k]
+                    for k in range(feat_count)}
+
+    labels = dataset[feat_count]
+
+    return feature_cols, labels
 
 if __name__ == "__main__":
     database_path = r"C:\tmp\Berlin"

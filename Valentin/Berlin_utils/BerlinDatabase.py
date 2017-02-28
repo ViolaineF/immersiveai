@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from BerlinSample import BerlinSample
+from Berlin_utils.BerlinSample import BerlinSample
 
 """
 Emotions are labeled in the 6th position (index 5) of the .wav file name, as follow :
