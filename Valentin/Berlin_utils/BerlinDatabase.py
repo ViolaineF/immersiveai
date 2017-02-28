@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from Berlin_utils.BerlinSample import BerlinSample
+from BerlinSample import BerlinSample
 
 """
 Emotions are labeled in the 6th position (index 5) of the .wav file name, as follow :
@@ -120,7 +120,7 @@ class BerlinDatabase(object):
         lengths, samples = zip(*sorted(zip(lengths, samples), key=lambda pair: pair[0]))
         # Padding
         batch_size = len(samples)
-        mfcc_batch = np.zeros([batch_size, max_mfcc_features_length, self.mfcc_features_count])
+        mfcc_batch = np.zeros([batch_size, max_mfcc_features_length, self.mfcc_features_count], dtype = np.float32)
         print("build_mfcc batch dimensions: ", [batch_size, max_mfcc_features_length, self.mfcc_features_count])
         for i in range(batch_size):
             for j in range(lengths[i]):

@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import os
 
 from BerlinDatabase import BerlinDatabase
@@ -20,7 +21,7 @@ class BerlinTFRecords(object):
         self.database.load_batch()
         if self.database.samples_count <= validation_size:
             raise Exception("Validation size (%d) is bigger than database size (%d)" % (validation_size, self.database.samples_count))
-        mfcc = self.database.mfcc_features
+        mfcc = self.database.mfcc_features.astype(np.float32)
         mfcc_lengths = self.database.mfcc_features_lengths
         labels = self.database.emotion_tokens
 
@@ -55,14 +56,29 @@ class BerlinTFRecords(object):
             example = tf.train.Example(
                 features = tf.train.Features(
                     feature = {
-                        'mfcc_raw' : _bytes_feature(mfcc_raw),
-                        'mfcc_lengths' : _int64_feature(mfcc_lengths[i]),
-                        'labels' : _int64_feature(labels[i])
+                        "mfcc_raw" : _bytes_feature(mfcc_raw),
+                        "mfcc_length" : _int64_feature(mfcc_lengths[i]),
+                        "label" : _int64_feature(labels[i])
                         }
                     )
                 )
             writer.write(example.SerializeToString())
         writer.close()
+
+    def read_and_decode_dataset(filename_queue):
+        reader = tf.TFRecordReader()
+        keys, serialized_example = reader.read(filename_queue)
+        features = tf.parse_single_example(
+            serialized = serialized_example,
+            features = \
+                {
+                    "mfcc_raw" : tf.FixedLenFeature([], tf.string),
+                    "mfcc_length" : tf.FixedLenFeature([], tf.int64),
+                    "label" : tf.FixedLenFeature([], tf.int64)
+                }
+            )
+
+        mfcc = tf.decode_raw(features["mfcc_raw"], tf.float32)
 
 if __name__ == "__main__":
     database_path = r"C:\tmp\Berlin"

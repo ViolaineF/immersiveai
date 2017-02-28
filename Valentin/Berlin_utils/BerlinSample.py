@@ -62,7 +62,7 @@ class BerlinSample(object):
 
         mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count, winstep = winstep, winlen = winlen)
         mfcc_file_path = self.timit_dataset_path + self.mfcc_file_name
-        np.save(mfcc_file_path, mfcc_feat)
+        np.save(mfcc_file_path, mfcc_feat.astype(np.float32))
 
     def load(self,
            load_mfcc = False, load_wav = False):
