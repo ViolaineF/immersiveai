@@ -18,6 +18,8 @@ N - Neutral
 class BerlinDatabase(object):
     def __init__(self, database_path : str, mfcc_features_count = 40):
         self.database_path = database_path
+        if not os.path.exists(self.database_path):
+            raise FileNotFoundError("Database directory does not exists")
         self.mfcc_features_count = mfcc_features_count
 
         self.samples_list_path = os.path.join(database_path, "samples_list.txt")
@@ -45,6 +47,8 @@ class BerlinDatabase(object):
                 samples_names.append(line.replace('\n', ''))
         # Keeping the list inside the object
         self.samples_names = samples_names
+        if len(self.samples_names) == 0:
+            raise FileNotFoundError("No samples were found in samples list (%s)" % (self.samples_list_path))
         return self.samples_names
 
     def load_samples(self,
@@ -70,6 +74,8 @@ class BerlinDatabase(object):
                 if not file.endswith(".wav"):
                     continue
                 samples_names.append(sample_root + '\\' + file[:-4])
+        if len(samples_names) == 0:
+            raise FileNotFoundError("No samples were found in database path (%s)" % (self.database_path))
         # Building of final string to write
         samples_names_string = ""
         for sample_name in samples_names:
@@ -152,29 +158,34 @@ class BerlinDatabase(object):
             self.load_batch()
             self.shuffle_batch()
 
-        batch_limit_size = len(self.mfcc_features)
         start = self.batch_index
-        end = min(self.batch_index + batch_size, batch_limit_size - 1)
+        end = min(self.batch_index + batch_size, self.samples_count)
         mfcc_features_batch         = self.mfcc_features[start : end]
         mfcc_features_lengths_batch = self.mfcc_features_lengths[start : end]
         emotion_tokens_batch        = self.emotion_tokens[start : end]
 
         self.batch_index += batch_size
-        if self.batch_index >= batch_limit_size:
+        if self.batch_index >= self.samples_count:
             self.batch_index = 0
             self.shuffle_batch()
         return (mfcc_features_batch, mfcc_features_lengths_batch, emotion_tokens_batch)
 
+    @property
+    def samples_count(self):
+        if self.mfcc_features_lengths is None:
+            self.load_mfcc_lengths()
+        return len(self.mfcc_features_lengths)
+
 def build_timit_database(database_path):
-  print("Build Berlin EMO-DB database : initializing...")
-  data = BerlinDatabase(database_path)
-  print("Build Berlin EMO-DB database : starting ...")
-  print("Build Berlin EMO-DB database : building MFCCs ...")
-  data.build_samples_mfcc_features(winstep = 0.05, winlen = 0.1)
-  print("Build Berlin EMO-DB database : building datasets batch ...")
-  data.build_batch()
-  print("Build Berlin EMO-DB database : finished !")
+    print("Build Berlin EMO-DB database : initializing...")
+    data = BerlinDatabase(database_path)
+    print("Build Berlin EMO-DB database : starting ...")
+    print("Build Berlin EMO-DB database : building MFCCs ...")
+    data.build_samples_mfcc_features(winstep = 0.25, winlen = 0.25)
+    print("Build Berlin EMO-DB database : building datasets batch ...")
+    data.build_batch()
+    print("Build Berlin EMO-DB database : finished !")
 
 if __name__ == "__main__":
-  database_path = r"C:\tmp\Berlin"
-  build_timit_database(database_path)
+    database_path = r"C:\tmp\Berlin"
+    build_timit_database(database_path)

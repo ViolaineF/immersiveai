@@ -1,0 +1,25 @@
+import tensorflow as tf
+from BerlinDatabase import BerlinDatabase
+
+def _int64_feature(value):
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+def _bytes_feature(value):
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+class BerlinTFRecords(object):
+    def __init__(self, database : BerlinDatabase, validation_size = 50):
+        self.database = database
+        self.database_path = database.database_path
+        if self.database is None:
+            raise Exception("No database was provided")
+        if self.database.samples_count <= validation_size:
+            raise Exception("Validation size (%d) is bigger than database size (%d)" % (validation_size, self.database.samples_count))
+
+    def convert_to_tfrecords():
+        pass
+
+if __name__ == "__main__":
+    database_path = r"C:\tmp2\Berlin"
+    database = BerlinDatabase(database_path)
+    converter = BerlinTFRecords(database)
