@@ -91,24 +91,21 @@ def cldnn_model_fn(features, labels, mode, params):
             shape = [-1, params["max_timesteps"] * params["lstm_projection"]])
 
     with tf.name_scope("Fully_connected"):
-        dense_layer1 = tf.layers.dense(
-            inputs = lstm_output,
-            units = params["fully_connected1_size"],
-            activation = tf.nn.relu,
-            use_bias = True,
-            kernel_initializer = tf.truncated_normal_initializer(stddev = 0.1, mean = 0.1),
-            bias_initializer = tf.constant_initializer(value = 0.1))
+        dense_layer = lstm_output
 
-        dense_layer2 = tf.layers.dense(
-            inputs = dense_layer1,
-            units = params["fully_connected2_size"],
-            activation = tf.nn.relu,
-            use_bias = True,
-            kernel_initializer = tf.truncated_normal_initializer(stddev = 0.1, mean = 0.1),
-            bias_initializer = tf.constant_initializer(value = 0.1))
+        if params["fully_connected_sizes"] is not None:
+            for size in params["fully_connected_sizes"]:
+                dense_layer = tf.layers.dense(
+                    inputs = dense_layer,
+                    units = size,
+                    activation = tf.nn.relu,
+                    use_bias = True,
+                    kernel_initializer = tf.truncated_normal_initializer(stddev = 0.2, mean = 0.25),
+                    bias_initializer = tf.constant_initializer(value = 0.25))
+            
 
     dropout = tf.layers.dropout(
-        inputs = dense_layer1,
+        inputs = dense_layer,
         rate = 0.4,
         training = mode==learn.ModeKeys.TRAIN)
 
@@ -117,8 +114,8 @@ def cldnn_model_fn(features, labels, mode, params):
             inputs = dropout,
             units = params["labels_class_count"],
             use_bias = True,
-            kernel_initializer = tf.truncated_normal_initializer(stddev = 0.1, mean = 0.1),
-            bias_initializer = tf.constant_initializer(value = 0.1))
+            kernel_initializer = tf.truncated_normal_initializer(stddev = 0.2, mean = 0.25),
+            bias_initializer = tf.constant_initializer(value = 0))
 
         logits = tf.reshape(
             logits_flat,
@@ -189,15 +186,14 @@ def main(unused_argv):
 
         "dimension_reduction_size" : 64, # 256
     
-        "lstm_units" : 512,               # 832
-        "lstm_projection" : 256,          # 512
-        "lstm_cell_count" : 8,            # 2
+        "lstm_units" : 1024,               # 832
+        "lstm_projection" : 512,          # 512
+        "lstm_cell_count" : 6,            # 2
 
-        "fully_connected1_size" : 128,   # 1024
-        "fully_connected2_size" : 64,   # 1024
+        "fully_connected_sizes" : [512, 256, 128, 64, 32],   # 1024
 
         "learning_rate" : 1e-3,
-        "optimizer" : tf.train.MomentumOptimizer(learning_rate = 1e-3, momentum = 0.5)
+        "optimizer" : "Adam" #tf.train.MomentumOptimizer(learning_rate = 1e-3, momentum = 0.5)
     }
 
     run_config = learn.RunConfig(
@@ -206,7 +202,7 @@ def main(unused_argv):
 
     cldnn_classifier = learn.Estimator(
         model_fn = cldnn_model_fn,
-        model_dir = r"C:\tmp\berlin_lstm\15_mean=0.1",
+        model_dir = r"C:\tmp\berlin_lstm\22",
         params = parameters,
         config = run_config)
 
@@ -224,7 +220,7 @@ def main(unused_argv):
 
     cldnn_classifier.fit(
         input_fn = berlin_input_fn_train_dataset,
-        steps = 1500,
+        steps = 15000,
         monitors=[validation_monitor])
 
     eval_results = cldnn_classifier.evaluate(
