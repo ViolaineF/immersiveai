@@ -117,11 +117,11 @@ class TimitDatabase(object):
       for dataset in self.datasets:
         dataset.build_mfcc_batch(max_mfcc_features_length)
 
-    #def build_mfcc_batches_byword(self):
-    #  # Getting max length across all datasets (for padding)
-    #  max_mfcc_features_length_byword = self.get_max_mfcc_features_length_byword()
-    #  for dataset in self.datasets:
-    #    dataset.build_mfcc_batch_byword(max_mfcc_features_length_byword)
+    def build_mfcc_batches_byword(self):
+      # Getting max length across all datasets (for padding)
+      max_mfcc_features_length_byword = self.get_max_mfcc_features_length_byword()
+      for dataset in self.datasets:
+        dataset.build_mfcc_batch_byword(max_mfcc_features_length_byword)
 
     def build_phonemes_ids_batches(self):
       # Getting max length across all datasets (for padding)

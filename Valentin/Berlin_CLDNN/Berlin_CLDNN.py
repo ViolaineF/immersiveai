@@ -191,13 +191,13 @@ def main(unused_argv):
     
         "lstm_units" : 512,               # 832
         "lstm_projection" : 256,          # 512
-        "lstm_cell_count" : 4,            # 2
+        "lstm_cell_count" : 8,            # 2
 
         "fully_connected1_size" : 128,   # 1024
         "fully_connected2_size" : 64,   # 1024
 
-        "learning_rate" : 1e-2,
-        "optimizer" : tf.train.AdamOptimizer(learning_rate = 1e-3)
+        "learning_rate" : 1e-3,
+        "optimizer" : tf.train.MomentumOptimizer(learning_rate = 1e-3, momentum = 0.5)
     }
 
     run_config = learn.RunConfig(
@@ -206,7 +206,7 @@ def main(unused_argv):
 
     cldnn_classifier = learn.Estimator(
         model_fn = cldnn_model_fn,
-        model_dir = r"C:\tmp\berlin_lstm\13_lr=1e-2",
+        model_dir = r"C:\tmp\berlin_lstm\15_mean=0.1",
         params = parameters,
         config = run_config)
 
