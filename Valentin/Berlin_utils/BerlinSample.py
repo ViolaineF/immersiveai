@@ -60,11 +60,11 @@ class BerlinSample(object):
             sample_rate = audio_file.samplerate
             data = audio_file.read()
 
-        #mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count, winstep = winstep, winlen = winlen)
+        mfcc_feat = mfcc(data, sample_rate, nfilt = features_count, numcep = features_count, winstep = winstep, winlen = winlen)
         #mfcc_feat, _ = fbank(data, sample_rate, nfilt = features_count, winstep = winstep, winlen = winlen)
         #mfcc_feat = logfbank(data, sample_rate, nfilt = features_count, winstep = winstep, winlen = winlen)
 
-        mfcc_feat = BerlinSample.keep_raw(data, features_count, 50)
+        #mfcc_feat = BerlinSample.keep_raw(data, features_count, 50)
 
         mfcc_file_path = self.timit_dataset_path + self.mfcc_file_name
         np.save(mfcc_file_path, mfcc_feat.astype(np.float32))

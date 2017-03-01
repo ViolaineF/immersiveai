@@ -121,14 +121,18 @@ class BerlinDatabase(object):
         lengths, samples = zip(*sorted(zip(lengths, samples), key=lambda pair: pair[0]))
         # Padding
         batch_size = len(samples)
-        mfcc_batch = np.zeros([batch_size, max_mfcc_features_length, self.mfcc_features_count], dtype = np.float32)
-        print("build_mfcc batch dimensions: ", [batch_size, max_mfcc_features_length, self.mfcc_features_count])
+        mfcc = []
         for i in range(batch_size):
-            for j in range(lengths[i]):
-                for k in range(self.mfcc_features_count):
-                    mfcc_batch[i, j, k] = samples[i].mfcc[j, k]
+          mfcc.append(samples[i].mfcc.astype(np.float32))
+        mfcc = np.asarray(mfcc)
+        #mfcc_batch = np.zeros([batch_size, max_mfcc_features_length, self.mfcc_features_count], dtype = np.float32)
+        #print("build_mfcc batch dimensions: ", [batch_size, max_mfcc_features_length, self.mfcc_features_count])
+        #for i in range(batch_size):
+        #    for j in range(lengths[i]):
+        #        for k in range(self.mfcc_features_count):
+        #            mfcc_batch[i, j, k] = samples[i].mfcc[j, k]
         # Saving
-        np.save(self.mfcc_features_path, mfcc_batch)
+        np.save(self.mfcc_features_path, mfcc)
 
     def get_max_mfcc_features_length(self):
         if self.mfcc_features_lengths is None:
@@ -142,10 +146,20 @@ class BerlinDatabase(object):
             emotion_tokens.append(sample.emotion_token)
         np.save(self.emotion_tokens_path, emotion_tokens)
 
-    def load_batch(self):
+    def load_batch(self, padding = None):
         self.mfcc_features = np.load(self.mfcc_features_path)
         self.mfcc_features_lengths = np.load(self.mfcc_lengths_path)
         self.emotion_tokens = np.load(self.emotion_tokens_path)
+        if padding is not None:
+            samples_count = len(self.mfcc_features)
+            tmp = np.zeros(shape = [samples_count, padding, self.mfcc_features_count], dtype = np.float32)
+            for i in range(samples_count):
+                length = min(self.mfcc_features_lengths[i], padding)
+                for j in range(length):
+                    for k in range(self.mfcc_features_count):
+                        tmp[i, j, k] = self.mfcc_features[i][j, k]
+            self.mfcc_features = tmp
+        return self.mfcc_features, self.mfcc_features_lengths, self.emotion_tokens
 
     def shuffle_batch(self):
         order = np.arange(len(self.mfcc_features))
@@ -177,16 +191,16 @@ class BerlinDatabase(object):
             self.load_mfcc_lengths()
         return len(self.mfcc_features_lengths)
 
-def build_timit_database(database_path, mfcc_features_count = 40):
+def build_timit_database(database_path, mfcc_features_count = 40, winstep = 0.01, winlen = 0.025):
     print("Build Berlin EMO-DB database : initializing...")
     data = BerlinDatabase(database_path, mfcc_features_count)
     print("Build Berlin EMO-DB database : starting ...")
     print("Build Berlin EMO-DB database : building MFCCs ...")
-    data.build_samples_mfcc_features(winstep = 0.05, winlen = 0.01)
+    data.build_samples_mfcc_features(winstep = winstep, winlen = winlen)
     print("Build Berlin EMO-DB database : building datasets batch ...")
     data.build_batch()
     print("Build Berlin EMO-DB database : finished !")
 
 if __name__ == "__main__":
     database_path = r"C:\tmp\Berlin"
-    build_timit_database(database_path, 20)
+    build_timit_database(database_path)
