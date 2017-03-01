@@ -29,6 +29,9 @@
   <ItemGroup>
     <Compile Include="BerlinDatabase.py" />
     <Compile Include="BerlinSample.py" />
+    <Compile Include="BerlinTFRecords.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
   <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />

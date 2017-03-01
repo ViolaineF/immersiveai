@@ -59,7 +59,8 @@ class BerlinDatabase(object):
             sample.load(
                       load_mfcc = load_mfcc,
                       load_wav = load_wav)
-            samples.append(sample)
+            if sample.emotion_token != None:
+                samples.append(sample)
         return samples
 
     def build_samples_list(self):
@@ -176,16 +177,16 @@ class BerlinDatabase(object):
             self.load_mfcc_lengths()
         return len(self.mfcc_features_lengths)
 
-def build_timit_database(database_path):
+def build_timit_database(database_path, mfcc_features_count = 40):
     print("Build Berlin EMO-DB database : initializing...")
-    data = BerlinDatabase(database_path)
+    data = BerlinDatabase(database_path, mfcc_features_count)
     print("Build Berlin EMO-DB database : starting ...")
     print("Build Berlin EMO-DB database : building MFCCs ...")
-    data.build_samples_mfcc_features(winstep = 0.25, winlen = 0.25)
+    data.build_samples_mfcc_features(winstep = 0.05, winlen = 0.01)
     print("Build Berlin EMO-DB database : building datasets batch ...")
     data.build_batch()
     print("Build Berlin EMO-DB database : finished !")
 
 if __name__ == "__main__":
     database_path = r"C:\tmp\Berlin"
-    build_timit_database(database_path)
+    build_timit_database(database_path, 20)

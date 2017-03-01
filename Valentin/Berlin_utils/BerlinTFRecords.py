@@ -79,7 +79,7 @@ class BerlinTFRecords(object):
             )
 
         mfcc = tf.decode_raw(features["mfcc_raw"], tf.float32)
-        mfcc.set_shape([40*36])
+        mfcc.set_shape([20 * 143])
 
         mfcc_length = tf.cast(features["mfcc_length"], tf.int32)
 
@@ -112,6 +112,6 @@ def input_fn(dataset_path, batch_size, capacity = 1000):
 
 if __name__ == "__main__":
     database_path = r"C:\tmp\Berlin"
-    database = BerlinDatabase(database_path)
+    database = BerlinDatabase(database_path, 20)
     converter = BerlinTFRecords(database)
-    converter.convert_to_tfrecords()
+    converter.convert_to_tfrecords(50)
