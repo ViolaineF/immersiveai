@@ -7,17 +7,23 @@ from Berlin_utils.BerlinDatabase import BerlinDatabase, build_timit_database
 MFCC_COUNT = 26
 PADDING = 200
 
-build_timit_database(r"E:\tmp\Berlin", MFCC_COUNT, 0.025, 0.025)
-database = BerlinDatabase(r"E:\tmp\Berlin", MFCC_COUNT)
+def shuffle(inputs, labels):
+    order = np.random.shuffle(np.arange(len(inputs)))
+    inputs = inputs[order]
+    labels = inputs[order]
+    return inputs, labels
+
+build_timit_database(r"C:\tmp\Berlin", MFCC_COUNT, 0.025, 0.025)
+database = BerlinDatabase(r"C:\tmp\Berlin", MFCC_COUNT)
 print("Loading database")
 database.load_batch(padding = PADDING)
 print("Database loaded")
 
 mfcc = database.mfcc_features
+print("Preprocessing : Labels -> One Hot")
 labels = to_categorical(database.emotion_tokens, 5)
 
-np.random.shuffle(mfcc)
-np.random.shuffle(labels)
+shuffle(mfcc, labels)
 
 train_mfcc = mfcc[:-100]
 train_labels = labels[:-100]
