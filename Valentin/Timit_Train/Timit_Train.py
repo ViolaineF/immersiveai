@@ -1,5 +1,6 @@
 import numpy as np
 import tflearn
+import tensorflow as tf
 
 from tflearn.data_utils import to_categorical, pad_sequences
 from Timit_utils.TimitDatabase import TimitDatabase
@@ -42,7 +43,7 @@ test_mfcc, _, test_labels, _ = test_dataset.load_batch()
 
 print("Preprocessing : Padding inputs")
 train_mfcc = pad_sequences_2d(train_mfcc, inputs_maxlen, inputs_width, 0)
-train_mfcc = pad_sequences_2d(train_mfcc, inputs_maxlen, inputs_width, 0)
+test_mfcc = pad_sequences_2d(test_mfcc, inputs_maxlen, inputs_width, 0)
 
 print("Preprocessing : Padding outputs")
 train_labels = pad_sequences(train_labels, labels_maxlen)
@@ -56,10 +57,31 @@ print("Preprocessing : Shuffling")
 shuffle(train_mfcc, train_labels)
 shuffle(test_mfcc, test_labels)
 
+conv_feat_count = 32
+max_pool_size = 3
+conv_result_size = conv_feat_count * int(inputs_width / max_pool_size)
+reduction_size = 128
+
 print("Building network")
-net = tflearn.input_data([None, inputs_maxlen, inputs_width])
-net = tflearn.lstm(net, n_units = 128, dropout = 0.8, dynamic = True)
-net = tflearn.fully_connected(net, labels_maxlen * nb_classes, activation = 'softmax')
+input_data = tflearn.input_data([None, inputs_maxlen, inputs_width])
+### CONV
+net = tf.reshape(input_data, [-1, inputs_maxlen, inputs_width, 1])
+net = tflearn.conv_2d(net, nb_filter = conv_feat_count, filter_size = [9, 9])
+net = tflearn.max_pool_2d(net, [1, max_pool_size])
+net = tflearn.reshape(net, [-1, inputs_maxlen * conv_result_size])
+### Reduction
+net = tflearn.fully_connected(net, inputs_maxlen * reduction_size, activation = "relu")
+net = tflearn.reshape(net, [-1, inputs_maxlen, reduction_size])
+### LSTM
+net = tflearn.merge([input_data, net], mode = "concat", axis = 2)
+net = tflearn.lstm(net, n_units = 256, dropout = 0.8, dynamic = False, return_seq = True)
+net = tf.transpose(tf.stack(net), [1,0,2])
+net = tflearn.lstm(net, n_units = 256, dropout = 0.8, dynamic = False, return_seq = False)
+### DNN
+net = tflearn.fully_connected(net, 512, activation = "relu")
+net = tflearn.fully_connected(net, 512, activation = "relu")
+net = tflearn.fully_connected(net, labels_maxlen * nb_classes, activation = "softmax")
+net = tflearn.dropout(net, 0.5)
 net = tflearn.reshape(net, [-1, labels_maxlen, nb_classes])
 net = tflearn.regression(net, optimizer = "adam", learning_rate = 0.001, loss = "categorical_crossentropy")
 
