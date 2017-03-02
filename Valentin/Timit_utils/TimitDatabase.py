@@ -175,5 +175,5 @@ def build_timit_database(timit_database_path):
   print("Build TIMIT database : finished !")
 
 if __name__ == "__main__":
-  timit_database_path = r"E:\tmp\TIMIT"
+  timit_database_path = r"C:\tmp\TIMIT"
   build_timit_database(timit_database_path)

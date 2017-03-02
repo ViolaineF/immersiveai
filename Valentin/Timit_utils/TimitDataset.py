@@ -242,6 +242,8 @@ class TimitDataset(object):
     self.phonemes_ids = np.load(self.phonemes_ids_path)
     self.phonemes_lengths = np.load(self.phonemes_lengths_path)
 
+    return self.mfcc_features, self.mfcc_features_lengths, self.phonemes_ids, self.phonemes_lengths
+
   #def load_batch_byword(self):
   #  self.mfcc_features = np.load(self.mfcc_features_byword_path)
   #  self.mfcc_features_lengths = np.load(self.mfcc_lengths_byword_path)

@@ -15,20 +15,23 @@ def pad_sequences_2d(sequences, maxlen, width, value):
     tmp = np.reshape(tmp, [len(sequences), maxlen, width])
     return tmp
 
-build_timit_database(r"E:\tmp\Berlin", MFCC_COUNT, 0.025, 0.025)
-database = BerlinDatabase(r"E:\tmp\Berlin", MFCC_COUNT)
+def shuffle(inputs, labels):
+    order = np.random.shuffle(np.arange(len(inputs)))
+    inputs = inputs[order]
+    labels = inputs[order]
+    return inputs, labels
+
+build_timit_database(r"C:\tmp\Berlin", MFCC_COUNT, 0.025, 0.025)
+database = BerlinDatabase(r"C:\tmp\Berlin", MFCC_COUNT)
 print("Loading database")
 mfcc, mfcc_lengths, labels = database.load_batch()
 print("Database loaded")
 
-print("Preprocessing : Padding MFCC")
-mfcc = pad_sequences_2d(mfcc, PADDING, MFCC_COUNT, 0)
-print("Preprocessing : Labels -> One hot")
+mfcc = database.mfcc_features
+print("Preprocessing : Labels -> One Hot")
 labels = to_categorical(labels, 5)
 
-print("Preprocessing : Shuffling")
-np.random.shuffle(mfcc)
-np.random.shuffle(labels)
+shuffle(mfcc, labels)
 
 train_mfcc = mfcc[:-100]
 train_labels = labels[:-100]
